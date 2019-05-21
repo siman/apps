@@ -6,6 +6,9 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
+      "@dappforce/blogs/": [ "packages/df-blogs/src/" ],
+      "@dappforce/blogs/*": [ "packages/df-blogs/src/*" ],
+      
       "@joystream/types/": [ "packages/joy-types/src/" ],
       "@joystream/types/*": [ "packages/joy-types/src/*" ],
       "@polkadot/joy-election/": [ "packages/joy-election/src/" ],

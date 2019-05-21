@@ -14,6 +14,8 @@ import proposals from './joy-proposals';
 import roles from './joy-roles';
 import pages from './joy-pages';
 
+import blogs from './df-blogs';
+
 import template from './123code';
 import accounts from './accounts';
 import addressbook from './addressbook';
@@ -33,6 +35,7 @@ const routes: Routes = appSettings.isBasicMode
     roles,
     transfer,
     null,
+    blogs,
     media,
     members,
     accounts,
@@ -53,6 +56,7 @@ const routes: Routes = appSettings.isBasicMode
     roles,
     transfer,
     null,
+    blogs,
     media,
     members,
     accounts,
