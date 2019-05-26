@@ -15,22 +15,12 @@ import translate from './translate';
 import ListBlogs from './ListBlogs';
 import EditBlog from './EditBlog';
 import ViewBlogById from './ViewBlogById';
+import { NewPost, EditPost } from './EditPost';
+import { ViewPostById } from './ViewPost';
 
 type Props = AppProps & ApiProps & I18nProps & {
   nextBlogId?: BN
 };
-
-function BlogsByAccount (p: {}) {
-  return <em>TODO BlogsByAccount</em>;
-}
-
-function PostsByBlog (p: {}) {
-  return <em>TODO PostsByBlog</em>;
-}
-
-function PostById (p: {}) {
-  return <em>TODO PostById</em>;
-}
 
 class App extends React.PureComponent<Props> {
 
@@ -59,9 +49,11 @@ class App extends React.PureComponent<Props> {
         </header>
         <Switch>
           <Route path={`${basePath}/new`} component={EditBlog} />
-          <Route path={`${basePath}/:blogId/edit`} component={EditBlog} />
-          <Route path={`${basePath}/:blogId`} component={ViewBlogById} />
-          <Route path={`${basePath}/:blogId/:postId`} component={PostById} />
+          <Route path={`${basePath}/posts/:id/edit`} component={EditPost} />
+          <Route path={`${basePath}/posts/:id`} component={ViewPostById} />
+          <Route path={`${basePath}/:id/edit`} component={EditBlog} />
+          <Route path={`${basePath}/:id/newPost`} component={NewPost} />
+          <Route path={`${basePath}/:id`} component={ViewBlogById} />
           <Route component={ListBlogs} />
         </Switch>
       </main>

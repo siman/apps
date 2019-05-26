@@ -37,7 +37,7 @@ class Component extends React.PureComponent<Props> {
           ? <em>No blogs created yet.</em>
           : <div className='ui huge relaxed middle aligned divided list ProfilePreviews'>
               {ids.map((id, i) =>
-                <ViewBlog {...this.props} key={i} blogId={id} preview />
+                <ViewBlog {...this.props} key={i} id={id} preview />
               )}
             </div>
       }</Section>

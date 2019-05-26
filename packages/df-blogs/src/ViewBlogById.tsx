@@ -5,22 +5,15 @@ import { I18nProps } from '@polkadot/ui-app/types';
 import translate from './translate';
 import ViewBlog from './ViewBlog';
 import { BlogId } from './types';
+import { UrlHasIdProps } from './utils';
 
-type Props = I18nProps & {
-  match: {
-    params: {
-      blogId: string
-    }
-  }
-};
+type Props = I18nProps & UrlHasIdProps;
 
 class Component extends React.PureComponent<Props> {
   render () {
-    const { match: { params: { blogId } } } = this.props;
-    return blogId
-     ? <div className='ui massive relaxed middle aligned list FullProfile'>
-      <ViewBlog blogId={new BlogId(blogId)} />
-    </div>
+    const { match: { params: { id } } } = this.props;
+    return id
+     ? <ViewBlog id={new BlogId(id)} />
      : null;
   }
 }

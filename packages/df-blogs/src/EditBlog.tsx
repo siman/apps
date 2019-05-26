@@ -1,18 +1,20 @@
 import React from 'react';
-import { Form, Field, ErrorMessage, withFormik, FormikProps, FormikErrors, FormikTouched } from 'formik';
+import { Button } from 'semantic-ui-react';
+import { Form, Field, withFormik, FormikProps, FormikErrors, FormikTouched } from 'formik';
 import * as Yup from 'yup';
+import { History } from 'history';
 
 import { Option, Text } from '@polkadot/types';
-import { BareProps } from '@polkadot/ui-app/types';
 import Section from '@polkadot/joy-utils/Section';
 import TxButton from '@polkadot/joy-utils/TxButton';
 import { nonEmptyStr } from '@polkadot/joy-utils/index';
 import { SubmittableResult } from '@polkadot/api';
-import { BlogId, Blog, BlogData, BlogUpdate, OptionVecAccountId, VecAccountId, OptionText } from './types';
-import { MyAccountProps, withMyAccount } from '@polkadot/joy-utils/MyAccount';
-import { queryBlogsToProp } from './utils';
 import { withCalls } from '@polkadot/ui-api/index';
-import { Button } from 'semantic-ui-react';
+
+import * as JoyForms from '@polkadot/joy-utils/forms';
+import { MyAccountProps, withMyAccount } from '@polkadot/joy-utils/MyAccount';
+import { BlogId, Blog, BlogData, BlogUpdate, VecAccountId } from './types';
+import { queryBlogsToProp, UrlHasIdProps } from './utils';
 
 // TODO get next settings from Substrate:
 const SLUG_REGEX = /^[A-Za-z0-9_-]+$/;
@@ -62,50 +64,24 @@ type ValidationProps = {
 };
 
 type OuterProps = ValidationProps & {
-  storedEntity?: Blog
+  history?: History,
+  id?: BlogId,
+  struct?: Blog
 };
 
 type FormValues = BlogData & {
   slug: string
 };
 
-type FieldName = keyof FormValues;
-
 type FormProps = OuterProps & FormikProps<FormValues>;
 
-type LabelledProps = BareProps & {
-  name?: FieldName,
-  label?: string,
-  placeholder?: string,
-  children?: JSX.Element | JSX.Element[],
-  errors: FormikErrors<FormValues>,
-  touched: FormikTouched<FormValues>,
-  isSubmitting: boolean
-};
+const LabelledField = JoyForms.LabelledField<FormValues>();
 
-const LabelledField = (props: LabelledProps) => {
-  const { name, label, touched, errors, children } = props;
-  const hasError = name && touched[name] && errors[name];
-  return <div className={`field ${hasError ? 'error' : ''} ui--Labelled`}>
-    <label htmlFor={name}>{nonEmptyStr(label) && label + ':'}</label>
-    <div className='ui--Labelled-content'>
-      <div>{children}</div>
-      {name && <ErrorMessage name={name} component='div' className='ui pointing red label' />}
-    </div>
-  </div>;
-};
-
-const LabelledText = (props: LabelledProps) => {
-  const { name, placeholder, className, style, ...otherProps } = props;
-  const fieldProps = { className, style, name, placeholder };
-  return <LabelledField name={name} {...otherProps} >
-    <Field id={name} disabled={otherProps.isSubmitting} {...fieldProps} />
-  </LabelledField>;
-};
+const LabelledText = JoyForms.LabelledText<FormValues>();
 
 const InnerForm = (props: FormProps) => {
   const {
-    storedEntity,
+    struct,
     values,
     dirty,
     isValid,
@@ -136,7 +112,12 @@ const InnerForm = (props: FormProps) => {
 
   const onTxSuccess = (_txResult: SubmittableResult) => {
     setSubmitting(false);
+
+    // TODO get id of newly created post and redirect.
+    // goToView(id);
   };
+
+  const isNew = struct === undefined;
 
   const buildTxParams = () => {
     if (!isValid) return [];
@@ -144,36 +125,55 @@ const InnerForm = (props: FormProps) => {
     const json = JSON.stringify(
       { name, desc, image, tags });
 
-    if (!storedEntity) {
+    if (!struct) {
       return [ slug, json ];
     } else {
       // TODO update only dirty values.
       const update = new BlogUpdate({
-        writers: new Option(VecAccountId,(storedEntity.writers)), // TODO get updated writers from the form
+        // TODO get updated writers from the form
+        writers: new Option(VecAccountId,(struct.writers)),
         slug: new Option(Text, slug),
         json: new Option(Text, json)
       });
-      return [ storedEntity.id, update ];
+      return [ struct.id, update ];
     }
   };
 
+  const goToView = (id: BlogId) => {
+    if (history) {
+      history.push('/blogs/' + id.toString());
+    }
+  };
+
+  const title = struct ? `Edit blog` : `New my blog`;
+
   return (
-    <Section title={storedEntity ? `Edit Blog` : `New Blog`}>
-    <Form className='ui form JoyForm'>
+    <Section className='EditEntityBox' title={title}>
+    <Form className='ui form JoyForm EditEntityForm'>
+
       <LabelledText name='name' label='Blog name' placeholder='Name of your blog.' {...props} />
+
       <LabelledText name='slug' label='URL slug' placeholder={`You can use a-z, 0-9, dashes and underscores.`} style={{ maxWidth: '30rem' }} {...props} />
+
       <LabelledText name='image' label='Image URL' placeholder={`Should be a valid image URL.`} {...props} />
+
       <LabelledField name='desc' label='Description' {...props}>
-        <Field component='textarea' id='desc' name='desc' disabled={isSubmitting} rows={3} placeholder='Tell others what is your blog about...' />
+        <Field component='textarea' id='desc' name='desc' disabled={isSubmitting} rows={3} placeholder='Tell others what is your blog about. You can use Markdown.' />
       </LabelledField>
+
+      {/* TODO tags */}
+
       <LabelledField {...props}>
         <TxButton
           type='submit'
           size='large'
-          label={storedEntity ? 'Update blog' : 'Create new blog'}
+          label={struct
+            ? 'Update blog'
+            : 'Create new blog'
+          }
           isDisabled={!dirty || isSubmitting}
           params={buildTxParams()}
-          tx={storedEntity
+          tx={struct
             ? 'blogs.updateBlog'
             : 'blogs.createBlog'
           }
@@ -198,17 +198,14 @@ const InnerForm = (props: FormProps) => {
 const EditForm = withFormik<OuterProps, FormValues>({
 
   // Transform outer props into form values
-  mapPropsToValues: props => {
-    const { storedEntity } = props;
-    if (storedEntity) {
-      console.log({ storedEntity });
-      const { slug, json: { name, desc, image, tags } } = storedEntity;
+  mapPropsToValues: (props): FormValues => {
+    const { struct } = props;
+    if (struct) {
+      const { json } = struct;
+      const slug = struct.slug.toString();
       return {
         slug,
-        name,
-        desc,
-        image,
-        tags
+        ...json
       };
     } else {
       return {
@@ -235,8 +232,8 @@ type BlogByIdProps = MyAccountProps & {
 
 function BlogByIdInner (p: BlogByIdProps) {
   if (p.blogById) {
-    const storedEntity = p.blogById.unwrapOr(undefined);
-    return <EditForm storedEntity={storedEntity} />;
+    const struct = p.blogById.unwrapOr(undefined);
+    return <EditForm struct={struct} />;
   } else return <em>Loading...</em>;
 }
 
@@ -246,18 +243,10 @@ const BlogById = withMyAccount(
   )(BlogByIdInner)
 );
 
-type ExtractIdFromUrlProps = {
-  match: {
-    params: {
-      blogId?: string
-    }
-  }
-};
-
-function ExtractIdFromUrl (props: ExtractIdFromUrlProps) {
-  const { match: { params: { blogId } } } = props;
-  return nonEmptyStr(blogId)
-    ? <BlogById id={new BlogId(blogId)} />
+function ExtractIdFromUrl (props: UrlHasIdProps) {
+  const { match: { params: { id } } } = props;
+  return nonEmptyStr(id)
+    ? <BlogById id={new BlogId(id)} />
     : <EditForm />;
 }
 
