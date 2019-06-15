@@ -37,6 +37,7 @@ export class VecAccountId extends Vector.with(AccountId) {}
 
 export class OptionText extends Option.with(Text) {}
 export class OptionChange extends Option.with(Change) {}
+export class OptionBlogId extends Option.with(BlogId) {}
 export class OptionCommentId extends Option.with(CommentId) {}
 export class OptionVecAccountId extends Option.with(VecAccountId) {}
 
@@ -165,6 +166,7 @@ export class Post extends Struct {
 }
 
 export type PostUpdateType = {
+  blog_id: OptionBlogId,
   slug: OptionText,
   json: OptionText
 };
@@ -172,6 +174,7 @@ export type PostUpdateType = {
 export class PostUpdate extends Struct {
   constructor (value?: PostUpdateType) {
     super({
+      blog_id: OptionBlogId,
       slug: OptionText,
       json: OptionText
     }, value);
