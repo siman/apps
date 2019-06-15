@@ -67,13 +67,13 @@ function ViewPostInternal (props: ViewPostProps) {
 
   const renderDetails = () => {
     return <>
-      <h1>
+      <h1 style={{ display: 'flex' }}>
         <span style={{ marginRight: '.5rem' }}>{title}</span>
         {editPostBtn()}
       </h1>
       <AuthorPreview address={account} />
-      <div style={{ marginTop: '1rem' }}>
-        {image && <img src={image} /* add onError handler */ />}
+      <div style={{ margin: '1rem 0' }}>
+        {image && <img src={image} className='DfPostImage' /* add onError handler */ />}
         <ReactMarkdown className='JoyMemo--full' source={body} linkTarget='_blank' />
         {/* TODO render tags */}
       </div>
