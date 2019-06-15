@@ -111,6 +111,8 @@ const InnerForm = (props: FormProps) => {
     } else {
       // TODO update only dirty values.
       const update = new PostUpdate({
+        // TODO setting new blog_id will move the post to another blog.
+        blog_id: new Option(BlogId, null),
         slug: new Option(Text, slug),
         json: new Option(Text, json)
       });
