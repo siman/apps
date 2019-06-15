@@ -88,6 +88,8 @@
   .JoySection-title {
     border-bottom: 1px solid #ddd;
     margin-bottom: 1rem;
+    padding: .5rem 0;
+    display: flex;
   }
 }
 
