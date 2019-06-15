@@ -57,7 +57,12 @@ function Component (props: Props) {
         <div className='content'>
           <div className='header'>
             <Link to={`/blogs/${id}`} className='handle'>{name.toString()}</Link>
-            {isMyBlog && <Link to={`/blogs/${id}/edit`} className='ui tiny button'>Edit my blog</Link>}
+            {isMyBlog &&
+              <Link to={`/blogs/${id}/edit`} className='ui tiny button'>
+                <i className='pencil alternate icon' />
+                Edit my blog
+              </Link>
+            }
           </div>
           <div className='description'>
             <ReactMarkdown className='JoyMemo--full' source={desc.toString()} linkTarget='_blank' />
@@ -81,10 +86,11 @@ function Component (props: Props) {
 
   const postsSectionTitle = () => {
     return <>
-      <h2>
-        <span style={{ marginRight: '.5rem' }}>Posts ({postsCount})</span>
-        <Link to={`/blogs/${id}/newPost`} className='ui tiny button'>Write post</Link>
-      </h2>
+      <span style={{ marginRight: '.5rem' }}>Posts ({postsCount})</span>
+      <Link to={`/blogs/${id}/newPost`} className='ui tiny button'>
+        <i className='plus icon' />
+        Write post
+      </Link>
     </>;
   };
 
