@@ -6,9 +6,11 @@ import { Segment } from 'semantic-ui-react';
 import { withCalls, withMulti } from '@polkadot/ui-api/with';
 import { Option } from '@polkadot/types';
 
+import Section from '@polkadot/joy-utils/Section';
 import { PostId, Post, CommentId } from './types';
 import { queryBlogsToProp, UrlHasIdProps, AuthorPreview } from './utils';
 import { withMyAccount, MyAccountProps } from '@polkadot/joy-utils/MyAccount';
+import { ViewComment } from './ViewComment';
 
 type ViewPostProps = MyAccountProps & {
   preview?: boolean,
@@ -32,10 +34,12 @@ function ViewPostInternal (props: ViewPostProps) {
 
   const post = postById.unwrap();
   const {
-    created: { owner, time, block },
+    created: { account, time, block },
     slug,
     json: { title, body, image, tags }
   } = post;
+
+  const commentsCount = commentIds ? commentIds.length : 0;
 
   // TODO show 'Edit' button only if I am owner
   const editPostBtn = () => (
@@ -60,8 +64,26 @@ function ViewPostInternal (props: ViewPostProps) {
           </Link>
           {editPostBtn()}
         </h2>
-        <AuthorPreview address={owner} />
+        <AuthorPreview address={account} />
       </Segment>
+    </>;
+  };
+
+  const renderCommentPreviews = () => {
+    if (!commentIds || commentIds.length === 0) {
+      return <em>This blog has no posts yet</em>;
+    }
+
+    return commentIds.map((id, i) => <ViewComment key={i} id={id} preview />);
+  };
+
+  const commentsSectionTitle = () => {
+    return <>
+      <span style={{ marginRight: '.5rem' }}>Comments ({commentsCount})</span>
+      <Link to={`/blogs/${id}/newComment`} className='ui tiny button'>
+        <i className='plus icon' />
+        Write comment
+      </Link>
     </>;
   };
 
@@ -71,12 +93,15 @@ function ViewPostInternal (props: ViewPostProps) {
         <span style={{ marginRight: '.5rem' }}>{title}</span>
         {editPostBtn()}
       </h1>
-      <AuthorPreview address={owner} />
+      <AuthorPreview address={account} />
       <div style={{ margin: '1rem 0' }}>
         {image && <img src={image} className='DfPostImage' /* add onError handler */ />}
         <ReactMarkdown className='JoyMemo--full' source={body} linkTarget='_blank' />
         {/* TODO render tags */}
       </div>
+      <Section title={commentsSectionTitle()}>
+        {renderCommentPreviews()}
+      </Section>
     </>;
   };
 

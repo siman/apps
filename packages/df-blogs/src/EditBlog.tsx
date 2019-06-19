@@ -127,7 +127,6 @@ const InnerForm = (props: FormProps) => {
 
     if (!struct) {
       const update = new BlogUpdate({
-        blog_id: new Option(BlogId, null),
         writers: new Option(VecAccountId, null),
         slug: new Option(Text, slug),
         json: new Option(Text, json)
@@ -137,12 +136,11 @@ const InnerForm = (props: FormProps) => {
       // TODO update only dirty values.
       const update = new BlogUpdate({
         // TODO get updated writers from the form
-        blog_id: new Option(BlogId,(struct.id)),
         writers: new Option(VecAccountId,(struct.writers)),
         slug: new Option(Text, slug),
         json: new Option(Text, json)
       });
-      return [ update ];
+      return [ struct.id, update ];
     }
   };
 

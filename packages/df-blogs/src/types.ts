@@ -6,7 +6,7 @@ export class PostId extends u64 {}
 export class CommentId extends u64 {}
 
 export type ChangeType = {
-  owner: AccountId,
+  account: AccountId,
   block: BlockNumber,
   time: Moment
 };
@@ -14,14 +14,14 @@ export type ChangeType = {
 export class Change extends Struct {
   constructor (value?: ChangeType) {
     super({
-      owner: AccountId,
+      account: AccountId,
       block: BlockNumber,
       time: Moment
     }, value);
   }
 
-  get owner (): AccountId {
-    return this.get('owner') as AccountId;
+  get account (): AccountId {
+    return this.get('account') as AccountId;
   }
 
   get block (): BlockNumber {
@@ -38,7 +38,6 @@ export class VecAccountId extends Vector.with(AccountId) {}
 export class OptionText extends Option.with(Text) {}
 export class OptionChange extends Option.with(Change) {}
 export class OptionBlogId extends Option.with(BlogId) {}
-export class OptionPostId extends Option.with(PostId) {}
 export class OptionCommentId extends Option.with(CommentId) {}
 export class OptionVecAccountId extends Option.with(VecAccountId) {}
 
@@ -97,7 +96,6 @@ export class Blog extends Struct {
 }
 
 export type BlogUpdateType = {
-  blog_id: OptionBlogId,
   writers: OptionVecAccountId,
   slug: OptionText,
   json: OptionText
@@ -106,7 +104,6 @@ export type BlogUpdateType = {
 export class BlogUpdate extends Struct {
   constructor (value?: BlogUpdateType) {
     super({
-      blog_id: OptionBlogId,
       writers: OptionVecAccountId,
       slug: OptionText,
       json: OptionText
@@ -170,7 +167,6 @@ export class Post extends Struct {
 
 export type PostUpdateType = {
   blog_id: OptionBlogId,
-  post_id: OptionPostId,
   slug: OptionText,
   json: OptionText
 };
@@ -179,7 +175,6 @@ export class PostUpdate extends Struct {
   constructor (value?: PostUpdateType) {
     super({
       blog_id: OptionBlogId,
-      post_id: OptionPostId,
       slug: OptionText,
       json: OptionText
     }, value);
@@ -208,19 +203,52 @@ export class Comment extends Struct {
       json: Text
     }, value);
   }
+
+  get id (): CommentId {
+    return this.get('id') as CommentId;
+  }
+
+  get parent_id (): OptionCommentId {
+    return this.get('parent_id') as OptionCommentId;
+  }
+
+  get post_id (): PostId {
+    return this.get('post_id') as PostId;
+  }
+
+  get blog_id (): BlogId {
+    return this.get('blog_id') as BlogId;
+  }
+
+  get created (): Change {
+    return this.get('created') as Change;
+  }
+
+  get updated (): OptionChange {
+    return this.get('updated') as OptionChange;
+  }
+
+  get json (): PostData {
+    const json = this.get('json') as Text;
+    return JSON.parse(json.toString());
+  }
 }
 
 export type CommentUpdateType = {
-  json: OptionText
+  json: Text
 };
 
 export class CommentUpdate extends Struct {
   constructor (value?: CommentUpdateType) {
     super({
-      json: OptionText
+      json: Text
     }, value);
   }
 }
+
+export type CommentData = {
+  body: string
+};
 
 export function registerBlogsTypes () {
   try {

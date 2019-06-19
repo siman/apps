@@ -109,7 +109,6 @@ const InnerForm = (props: FormProps) => {
     if (!struct) {
       const update = new PostUpdate({
         blog_id: new Option(BlogId, blogId),
-        post_id: new Option(BlogId, null),
         slug: new Option(Text, slug),
         json: new Option(Text, json)
       });
@@ -119,11 +118,10 @@ const InnerForm = (props: FormProps) => {
       const update = new PostUpdate({
         // TODO setting new blog_id will move the post to another blog.
         blog_id: new Option(BlogId, null),
-        post_id: new Option(BlogId, struct.id),
         slug: new Option(Text, slug),
         json: new Option(Text, json)
       });
-      return [ update ];
+      return [ struct.id, update ];
     }
   };
 
@@ -259,7 +257,7 @@ function LoadStruct (props: LoadStructProps) {
   }
 
   const struct = structOpt.unwrap();
-  const isMyStruct = myAddress === struct.created.owner.toString();
+  const isMyStruct = myAddress === struct.created.account.toString();
 
   if (isMyStruct) {
     return <EditForm {...props} struct={struct} />;
