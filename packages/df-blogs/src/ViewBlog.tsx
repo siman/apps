@@ -38,12 +38,12 @@ function Component (props: Props) {
   const blog = blogById.unwrap();
   const {
     id,
-    created: { account, time, block },
+    created: { owner, time, block },
     slug,
     json: { name, desc, image, tags }
   } = blog;
 
-  const isMyBlog = myAddress && account && myAddress === account.toString();
+  const isMyBlog = myAddress && owner && myAddress === owner.toString();
   const hasImage = image && nonEmptyStr(image.toString());
   const postsCount = postIds ? postIds.length : 0;
 
@@ -52,7 +52,7 @@ function Component (props: Props) {
       <div className={`item ProfileDetails ${isMyBlog && 'MyProfile'}`}>
         {hasImage
           ? <img className='ui avatar image' src={image.toString()} />
-          : <IdentityIcon className='image' value={account} size={40} />
+          : <IdentityIcon className='image' value={owner} size={40} />
         }
         <div className='content'>
           <div className='header'>
@@ -107,7 +107,7 @@ function Component (props: Props) {
       </Table.Row>
       <Table.Row>
         <Table.Cell>Created by</Table.Cell>
-        <Table.Cell><AddressMini value={account} isShort={false} isPadded={false} size={36} withName withBalance /></Table.Cell>
+        <Table.Cell><AddressMini value={owner} isShort={false} isPadded={false} size={36} withName withBalance /></Table.Cell>
       </Table.Row>
     </Table.Body>
     </Table>

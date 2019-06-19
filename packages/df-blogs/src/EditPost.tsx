@@ -107,24 +107,32 @@ const InnerForm = (props: FormProps) => {
       { title, body, image, tags });
 
     if (!struct) {
-      return [ blogId, slug, json ];
+      const update = new PostUpdate({
+        blog_id: new Option(BlogId, blogId),
+        post_id: new Option(BlogId, null),
+        slug: new Option(Text, slug),
+        json: new Option(Text, json)
+      });
+      return [ update ];
     } else {
       // TODO update only dirty values.
       const update = new PostUpdate({
         // TODO setting new blog_id will move the post to another blog.
         blog_id: new Option(BlogId, null),
+        post_id: new Option(BlogId, struct.id),
         slug: new Option(Text, slug),
         json: new Option(Text, json)
       });
-      return [ struct.id, update ];
+      return [ update ];
     }
   };
 
-  const goToView = (id: PostId) => {
-    if (history) {
-      history.push('/blogs/posts/' + id.toString());
-    }
-  };
+  // Todo: Redirect on update and create
+  // const goToView = (id: PostId) => {
+  //   if (history) {
+  //     history.push('/blogs/posts/' + id.toString());
+  //   }
+  // };
 
   const form =
     <Form className='ui form JoyForm EditEntityForm'>
@@ -251,7 +259,7 @@ function LoadStruct (props: LoadStructProps) {
   }
 
   const struct = structOpt.unwrap();
-  const isMyStruct = myAddress === struct.created.account.toString();
+  const isMyStruct = myAddress === struct.created.owner.toString();
 
   if (isMyStruct) {
     return <EditForm {...props} struct={struct} />;

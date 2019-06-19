@@ -126,24 +126,32 @@ const InnerForm = (props: FormProps) => {
       { name, desc, image, tags });
 
     if (!struct) {
-      return [ slug, json ];
+      const update = new BlogUpdate({
+        blog_id: new Option(BlogId, null),
+        writers: new Option(VecAccountId, null),
+        slug: new Option(Text, slug),
+        json: new Option(Text, json)
+      });
+      return [ update ];
     } else {
       // TODO update only dirty values.
       const update = new BlogUpdate({
         // TODO get updated writers from the form
+        blog_id: new Option(BlogId,(struct.id)),
         writers: new Option(VecAccountId,(struct.writers)),
         slug: new Option(Text, slug),
         json: new Option(Text, json)
       });
-      return [ struct.id, update ];
+      return [ update ];
     }
   };
 
-  const goToView = (id: BlogId) => {
-    if (history) {
-      history.push('/blogs/' + id.toString());
-    }
-  };
+  // Todo: Redirect on update and create
+  // const goToView = (id: BlogId) => {
+  //   if (history) {
+  //     history.push('/blogs/' + id.toString());
+  //   }
+  // };
 
   const title = struct ? `Edit blog` : `New my blog`;
 

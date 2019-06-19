@@ -32,7 +32,7 @@ function ViewPostInternal (props: ViewPostProps) {
 
   const post = postById.unwrap();
   const {
-    created: { account, time, block },
+    created: { owner, time, block },
     slug,
     json: { title, body, image, tags }
   } = post;
@@ -60,7 +60,7 @@ function ViewPostInternal (props: ViewPostProps) {
           </Link>
           {editPostBtn()}
         </h2>
-        <AuthorPreview address={account} />
+        <AuthorPreview address={owner} />
       </Segment>
     </>;
   };
@@ -71,7 +71,7 @@ function ViewPostInternal (props: ViewPostProps) {
         <span style={{ marginRight: '.5rem' }}>{title}</span>
         {editPostBtn()}
       </h1>
-      <AuthorPreview address={account} />
+      <AuthorPreview address={owner} />
       <div style={{ margin: '1rem 0' }}>
         {image && <img src={image} className='DfPostImage' /* add onError handler */ />}
         <ReactMarkdown className='JoyMemo--full' source={body} linkTarget='_blank' />
