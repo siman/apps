@@ -9,19 +9,15 @@ import { Option } from '@polkadot/types';
 import { PostId, Post, CommentId } from './types';
 import { queryBlogsToProp, UrlHasIdProps, AuthorPreview } from './utils';
 import { withMyAccount, MyAccountProps } from '@polkadot/joy-utils/MyAccount';
-// import ViewComment from './ViewComment';
-import { NewComment } from './EditComment';
-import Section from '@polkadot/joy-utils/Section';
-import { ViewComment, CommentsByPost } from './ViewComment';
+import { CommentsByPost } from './ViewComment';
 
 type ViewPostProps = MyAccountProps & {
   preview?: boolean,
   id: PostId,
-  postById: Option<Post>,
-  commentIds?: CommentId[]
+  postById: Option<Post>
 };
 
-function ViewPostInternal (props: ViewPostProps) {
+function ViewPostInternal(props: ViewPostProps) {
   const { postById } = props;
 
   if (postById === undefined) return <em>Loading...</em>;
@@ -30,8 +26,7 @@ function ViewPostInternal (props: ViewPostProps) {
   const {
     myAddress,
     preview = false,
-    id,
-    commentIds = []
+    id
   } = props;
 
   const post = postById.unwrap();
@@ -44,9 +39,9 @@ function ViewPostInternal (props: ViewPostProps) {
   // TODO show 'Edit' button only if I am owner
   const editPostBtn = () => (
     <Link
-      to={`/blogs/posts/${id.toString()}/edit`}
+      to={ `/blogs/posts/${id.toString()}/edit` }
       className='ui small button'
-      style={{ marginLeft: '.5rem' }}
+      style={ { marginLeft: '.5rem' } }
     >
       <i className='pencil alternate icon' />
       Edit
@@ -58,30 +53,30 @@ function ViewPostInternal (props: ViewPostProps) {
       <Segment>
         <h2>
           <Link
-            to={`/blogs/posts/${id.toString()}`}
-            style={{ marginRight: '.5rem' }}
-          >{title}
+            to={ `/blogs/posts/${id.toString()}` }
+            style={ { marginRight: '.5rem' } }
+          >{ title }
           </Link>
-          {editPostBtn()}
+          { editPostBtn() }
         </h2>
-        <AuthorPreview address={account} />
+        <AuthorPreview address={ account } />
       </Segment>
     </>;
   };
 
   const renderDetails = () => {
     return <>
-      <h1 style={{ display: 'flex' }}>
-        <span style={{ marginRight: '.5rem' }}>{title}</span>
-        {editPostBtn()}
+      <h1 style={ { display: 'flex' } }>
+        <span style={ { marginRight: '.5rem' } }>{ title }</span>
+        { editPostBtn() }
       </h1>
-      <AuthorPreview address={account} />
-      <div style={{ margin: '1rem 0' }}>
-        {image && <img src={image} className='DfPostImage' /* add onError handler */ />}
-        <ReactMarkdown className='JoyMemo--full' source={body} linkTarget='_blank' />
-        {/* TODO render tags */}
+      <AuthorPreview address={ account } />
+      <div style={ { margin: '1rem 0' } }>
+        { image && <img src={ image } className='DfPostImage' /* add onError handler */ /> }
+        <ReactMarkdown className='JoyMemo--full' source={ body } linkTarget='_blank' />
+        {/* TODO render tags */ }
       </div>
-      <CommentsByPost postId={post.id}/>
+      <CommentsByPost postId={ post.id } />
     </>;
   };
   return preview
@@ -93,16 +88,15 @@ export const ViewPost = withMulti(
   ViewPostInternal,
   withMyAccount,
   withCalls<ViewPostProps>(
-    queryBlogsToProp('postById', 'id'),
-    queryBlogsToProp('commentIdsByPostId', { paramName: 'id', propName: 'commentIds' })//TODO maibe remove?
+    queryBlogsToProp('postById', 'id')
   )
 );
 
-export function ViewPostById (props: UrlHasIdProps) {
+export function ViewPostById(props: UrlHasIdProps) {
   const { match: { params: { id } } } = props;
   try {
-    return <ViewPost id={new PostId(id)} />;
+    return <ViewPost id={ new PostId(id) } />;
   } catch (err) {
-    return <em>Invalid post ID: {id}</em>;
+    return <em>Invalid post ID: { id }</em>;
   }
 }
