@@ -181,12 +181,16 @@ export class PostUpdate extends Struct {
   }
 }
 
+
+export type CommentData = {
+  body: string
+};
+
 export type CommentType = {
   id: CommentId,
   parent_id: OptionCommentId,
   post_id: PostId,
-  blog_id: BlogId,
-  created: ChangeType,
+  created: Change,
   updated: OptionChange,
   json: Text
 };
@@ -197,22 +201,46 @@ export class Comment extends Struct {
       id: CommentId,
       parent_id: OptionCommentId,
       post_id: PostId,
-      blog_id: BlogId,
       created: Change,
       updated: OptionChange,
       json: Text
     }, value);
   }
+
+  get id (): CommentId {
+    return this.get('id') as CommentId;
+  }
+
+  get parent_id (): OptionCommentId {
+    return this.get('parent_id') as OptionCommentId;
+  }
+
+  get post_id (): PostId {
+    return this.get('post_id') as PostId;
+  }
+
+  get created (): Change {
+    return this.get('created') as Change;
+  }
+
+  get updated (): OptionChange {
+    return this.get('updated') as OptionChange;
+  }
+
+  get json (): CommentData {
+    const json = this.get('json') as Text;
+    return JSON.parse(json.toString());
+  }
 }
 
 export type CommentUpdateType = {
-  json: OptionText
+  json: Text
 };
 
 export class CommentUpdate extends Struct {
   constructor (value?: CommentUpdateType) {
     super({
-      json: OptionText
+      json: Text
     }, value);
   }
 }
