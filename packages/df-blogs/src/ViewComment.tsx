@@ -6,43 +6,36 @@ import { Option } from '@polkadot/types';
 
 import { PostId, CommentId, Comment } from './types';
 import { queryBlogsToProp } from './utils';
-import { MyAccountProps, withMyAccount } from '@polkadot/joy-utils/MyAccount';
 import Section from '@polkadot/joy-utils/Section';
 
 import { NewComment } from './EditComment';
-import { AddressMini } from '@polkadot/ui-app';
+import AddressMini from '@polkadot/ui-app/AddressMiniJoy';
 
-
-type Props = MyAccountProps & {
+type Props = {
   postId: PostId,
   commentIds?: CommentId[]
 };
 
-function InnerCommentsByPost(props: Props) {
+function InnerCommentsByPost (props: Props) {
 
   const {
-    myAddress,
     postId,
     commentIds = []
   } = props;
 
   const commentsCount = commentIds ? commentIds.length : 0;
 
-  if (!commentIds || commentIds.length === 0) {
-    return <Section title={ `Comments (${commentsCount})` }>
-      <NewComment postId={ postId } />
-    </Section>
-  }
-
-  return <Section title={ `Comments (${commentsCount})` }>
-    <NewComment postId={ postId } />
-    { commentIds.map((id, i) => <ViewComment key={ i } id={ id } />) }
+  return <Section title={`Comments (${commentsCount})`} className='DfCommentsByPost'>
+    <NewComment postId={postId} />
+    {commentsCount
+      ? commentIds.map((id, i) => <ViewComment key={i} id={id} />)
+      : <em>No comments yet</em>
+    }
   </Section>
 }
 
 export const CommentsByPost = withMulti(
   InnerCommentsByPost,
-  withMyAccount,
   withCalls<Props>(
     queryBlogsToProp('commentIdsByPostId', { paramName: 'postId', propName: 'commentIds' })
   )
@@ -54,8 +47,7 @@ type ViewCommentProps = {
   commentById?: Option<Comment>
 }
 
-
-function InnerViewComment(props: ViewCommentProps) {
+function InnerViewComment (props: ViewCommentProps) {
 
   const { commentById } = props;
 
@@ -64,25 +56,24 @@ function InnerViewComment(props: ViewCommentProps) {
   }
 
   const comment = commentById.unwrap();
-  const { account, time } = comment.created;
+  const { account, block, time } = comment.created;
   const { body } = comment.json;
 
-  return (
-    <SuiComment.Group threaded>
-      <SuiComment style={ { border: '1px solid grey', padding: '1rem', borderRadius: '1rem' } }>
-        {/* <AuthorPreview address={account} /> */ }
-        <AddressMini value={ account } isShort={ false } isPadded={ false } size={ 48 } withName />
-        <SuiComment.Metadata>
-          <div>{ time.toLocaleString() }</div>
+  return(
+  <SuiComment.Group threaded>
+    <SuiComment>
+      <AddressMini value={account} isShort={false} isPadded={false} withName/>
+      <SuiComment.Metadata>
+          <div>{time.toLocaleString()} at block #{block.toNumber()}</div>
         </SuiComment.Metadata>
-        <SuiComment.Content>
-          <SuiComment.Text style={ { marginTop: '.5rem' } }>{ body }</SuiComment.Text>
-          <SuiComment.Actions>
-            <SuiComment.Action>Reply</SuiComment.Action>
-          </SuiComment.Actions>
-        </SuiComment.Content>
-      </SuiComment>
-    </SuiComment.Group>);
+      <SuiComment.Content>
+        <SuiComment.Text>{body}</SuiComment.Text>
+        <SuiComment.Actions>
+          <SuiComment.Action>Reply</SuiComment.Action>
+        </SuiComment.Actions>
+      </SuiComment.Content>
+    </SuiComment>
+  </SuiComment.Group>);
 }
 
 export const ViewComment = withMulti(

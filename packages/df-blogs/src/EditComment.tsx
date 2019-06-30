@@ -46,7 +46,6 @@ const LabelledField = JoyForms.LabelledField<FormValues>();
 const InnerForm = (props: FormProps) => {
   const {
     postId,
-    // id,
     struct,
     values,
     dirty,
