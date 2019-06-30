@@ -1,9 +1,10 @@
-import { Option, Struct } from '@polkadot/types/codec';
-import { getTypeRegistry, BlockNumber, Moment, AccountId, u64, Text, Vector } from '@polkadot/types';
+import { Option, Struct, Enum } from '@polkadot/types/codec';
+import { getTypeRegistry, BlockNumber, Moment, AccountId, u16, u64, Text, Vector } from '@polkadot/types';
 
 export class BlogId extends u64 {}
 export class PostId extends u64 {}
 export class CommentId extends u64 {}
+export class ReactionId extends u64 {}
 
 export type ChangeType = {
   account: AccountId,
@@ -54,7 +55,8 @@ export type BlogType = {
   updated: OptionChange,
   writers: AccountId[],
   slug: Text,
-  json: Text
+  json: Text,
+  posts_count: u16
 };
 
 export class Blog extends Struct {
@@ -65,7 +67,8 @@ export class Blog extends Struct {
       updated: OptionChange,
       writers: VecAccountId,
       slug: Text,
-      json: Text
+      json: Text,
+      posts_count: u16
     }, value);
   }
 
@@ -92,6 +95,10 @@ export class Blog extends Struct {
   get json (): BlogData {
     const json = this.get('json') as Text;
     return JSON.parse(json.toString());
+  }
+
+  get posts_count (): u16 {
+    return this.get('posts_count') as u16;
   }
 }
 
@@ -124,7 +131,10 @@ export type PostType = {
   created: ChangeType,
   updated: OptionChange,
   slug: Text,
-  json: Text
+  json: Text,
+  comments_count: u16,
+  upvotes_count: u16,
+  downvotes_count: u16
 };
 
 export class Post extends Struct {
@@ -135,7 +145,10 @@ export class Post extends Struct {
       created: Change,
       updated: OptionChange,
       slug: Text,
-      json: Text
+      json: Text,
+      comments_count: u16,
+      upvotes_count: u16,
+      downvotes_count: u16
     }, value);
   }
 
@@ -162,6 +175,18 @@ export class Post extends Struct {
   get json (): PostData {
     const json = this.get('json') as Text;
     return JSON.parse(json.toString());
+  }
+
+  get comments_count (): u16 {
+    return this.get('comments_count') as u16;
+  }
+
+  get upvotes_count (): u16 {
+    return this.get('upvotes_count') as u16;
+  }
+
+  get downvotes_count (): u16 {
+    return this.get('downvotes_count') as u16;
   }
 }
 
@@ -192,7 +217,9 @@ export type CommentType = {
   post_id: PostId,
   created: Change,
   updated: OptionChange,
-  json: Text
+  json: Text,
+  upvotes_count: u16,
+  downvotes_count: u16
 };
 
 export class Comment extends Struct {
@@ -203,7 +230,9 @@ export class Comment extends Struct {
       post_id: PostId,
       created: Change,
       updated: OptionChange,
-      json: Text
+      json: Text,
+      upvotes_count: u16,
+      downvotes_count: u16
     }, value);
   }
 
@@ -231,6 +260,14 @@ export class Comment extends Struct {
     const json = this.get('json') as Text;
     return JSON.parse(json.toString());
   }
+
+  get upvotes_count (): u16 {
+    return this.get('upvotes_count') as u16;
+  }
+
+  get downvotes_count (): u16 {
+    return this.get('downvotes_count') as u16;
+  }
 }
 
 export type CommentUpdateType = {
@@ -247,6 +284,48 @@ export class CommentUpdate extends Struct {
 
 export class OptionComment extends Option.with(Comment) {}
 
+export const ReactionKinds: { [key: string ]: string } = {
+  Upvote: 'Upvote',
+  Downvote: 'Downvote'
+};
+
+export class ReactionKind extends Enum {
+  constructor (value?: any) {
+    super([
+      'Upvote',
+      'Downvote'
+    ], value);
+  }
+}
+
+export type ReactionType = {
+  id: ReactionId,
+  created: Change,
+  kind: ReactionKind
+};
+
+export class Reaction extends Struct {
+  constructor (value?: ReactionType) {
+    super({
+      id: ReactionId,
+      created: Change,
+      kind: ReactionKind
+    }, value);
+  }
+
+  get id (): ReactionId {
+    return this.get('id') as ReactionId;
+  }
+
+  get created (): Change {
+    return this.get('created') as Change;
+  }
+
+  get kind (): ReactionKind {
+    return this.get('kind') as ReactionKind;
+  }
+}
+
 export function registerBlogsTypes () {
   try {
     const typeRegistry = getTypeRegistry();
@@ -254,13 +333,16 @@ export function registerBlogsTypes () {
       BlogId,
       PostId,
       CommentId,
+      ReactionId,
       Change,
       Blog,
       BlogUpdate,
       Post,
       PostUpdate,
       Comment,
-      CommentUpdate
+      CommentUpdate,
+      ReactionKind,
+      Reaction
     });
   } catch (err) {
     console.error('Failed to register custom types of blogs module', err);
