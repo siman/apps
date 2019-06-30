@@ -245,6 +245,8 @@ export class CommentUpdate extends Struct {
   }
 }
 
+export class OptionComment extends Option.with(Comment) {}
+
 export function registerBlogsTypes () {
   try {
     const typeRegistry = getTypeRegistry();
@@ -264,3 +266,4 @@ export function registerBlogsTypes () {
     console.error('Failed to register custom types of blogs module', err);
   }
 }
+
