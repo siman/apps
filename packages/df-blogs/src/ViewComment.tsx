@@ -49,7 +49,7 @@ type ViewCommentProps = {
 
 function InnerViewComment (props: ViewCommentProps) {
 
-  const { commentById } = props;
+  const { id, commentById } = props;
 
   if (!commentById || commentById.isNone) {
     return null;
@@ -69,7 +69,7 @@ function InnerViewComment (props: ViewCommentProps) {
       <SuiComment.Content>
         <SuiComment.Text>{body}</SuiComment.Text>
         <SuiComment.Actions>
-          <SuiComment.Action>Reply</SuiComment.Action>
+          <SuiComment.Action><NewComment postId={comment.post_id} parentId={id} /></SuiComment.Action>
         </SuiComment.Actions>
       </SuiComment.Content>
     </SuiComment>
