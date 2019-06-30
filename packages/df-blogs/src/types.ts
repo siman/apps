@@ -1,5 +1,5 @@
 import { Option, Struct } from '@polkadot/types/codec';
-import { getTypeRegistry, BlockNumber, Moment, AccountId, u64, Text, Vector } from '@polkadot/types';
+import { getTypeRegistry, BlockNumber, Moment, AccountId, u16, u64, Text, Vector } from '@polkadot/types';
 
 export class BlogId extends u64 {}
 export class PostId extends u64 {}
@@ -54,7 +54,8 @@ export type BlogType = {
   updated: OptionChange,
   writers: AccountId[],
   slug: Text,
-  json: Text
+  json: Text,
+  posts_count: u16
 };
 
 export class Blog extends Struct {
@@ -65,7 +66,8 @@ export class Blog extends Struct {
       updated: OptionChange,
       writers: VecAccountId,
       slug: Text,
-      json: Text
+      json: Text,
+      posts_count: u16
     }, value);
   }
 
@@ -124,7 +126,10 @@ export type PostType = {
   created: ChangeType,
   updated: OptionChange,
   slug: Text,
-  json: Text
+  json: Text,
+  comments_count: u16,
+  upvotes_count: u16,
+  downvotes_count: u16
 };
 
 export class Post extends Struct {
@@ -135,7 +140,10 @@ export class Post extends Struct {
       created: Change,
       updated: OptionChange,
       slug: Text,
-      json: Text
+      json: Text,
+      comments_count: u16,
+      upvotes_count: u16,
+      downvotes_count: u16
     }, value);
   }
 
@@ -192,7 +200,9 @@ export type CommentType = {
   post_id: PostId,
   created: Change,
   updated: OptionChange,
-  json: Text
+  json: Text,
+  upvotes_count: u16,
+  downvotes_count: u16
 };
 
 export class Comment extends Struct {
@@ -203,7 +213,9 @@ export class Comment extends Struct {
       post_id: PostId,
       created: Change,
       updated: OptionChange,
-      json: Text
+      json: Text,
+      upvotes_count: u16,
+      downvotes_count: u16
     }, value);
   }
 
