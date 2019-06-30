@@ -303,7 +303,7 @@ export type ReactionType = {
 };
 
 export class Reaction extends Struct {
-  constructor (value?: CommentType) {
+  constructor (value?: ReactionType) {
     super({
       id: ReactionId,
       created: Change,
