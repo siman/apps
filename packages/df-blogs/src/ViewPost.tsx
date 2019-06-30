@@ -9,9 +9,7 @@ import { Option } from '@polkadot/types';
 import { PostId, Post, CommentId } from './types';
 import { queryBlogsToProp, UrlHasIdProps, AuthorPreview } from './utils';
 import { withMyAccount, MyAccountProps } from '@polkadot/joy-utils/MyAccount';
-// import ViewComment from './ViewComment';
-import { NewComment } from './EditComment';
-import Section from '@polkadot/joy-utils/Section';
+import { CommentsByPost } from './ViewComment';
 
 type ViewPostProps = MyAccountProps & {
   preview?: boolean,
@@ -29,8 +27,7 @@ function ViewPostInternal (props: ViewPostProps) {
   const {
     myAddress,
     preview = false,
-    id,
-    commentIds = []
+    id
   } = props;
 
   const post = postById.unwrap();
@@ -80,14 +77,9 @@ function ViewPostInternal (props: ViewPostProps) {
         <ReactMarkdown className='JoyMemo--full' source={body} linkTarget='_blank' />
         {/* TODO render tags */}
       </div>
-     
-      <Section title={`Comments`}>
-         {/* <ViewComment/> */}
-        <NewComment postId={post.id} />
-      </Section>
+      <CommentsByPost postId={post.id}/>
     </>;
   };
-
   return preview
     ? renderPreview()
     : renderDetails();
@@ -95,10 +87,9 @@ function ViewPostInternal (props: ViewPostProps) {
 
 export const ViewPost = withMulti(
   ViewPostInternal,
-  withMyAccount,
+  withMyAccount,//TODO replese with useMyAccount
   withCalls<ViewPostProps>(
-    queryBlogsToProp('postById', 'id'),
-    queryBlogsToProp('commentIdsByPostId', { paramName: 'id', propName: 'commentIds' })
+    queryBlogsToProp('postById', 'id')
   )
 );
 
