@@ -95,6 +95,10 @@ export class Blog extends Struct {
     const json = this.get('json') as Text;
     return JSON.parse(json.toString());
   }
+
+  get posts_count (): u16 {
+    return this.get('posts_count') as u16;
+  }
 }
 
 export type BlogUpdateType = {
@@ -171,6 +175,18 @@ export class Post extends Struct {
     const json = this.get('json') as Text;
     return JSON.parse(json.toString());
   }
+
+  get comments_count (): u16 {
+    return this.get('comments_count') as u16;
+  }
+
+  get upvotes_count (): u16 {
+    return this.get('upvotes_count') as u16;
+  }
+
+  get downvotes_count (): u16 {
+    return this.get('downvotes_count') as u16;
+  }
 }
 
 export type PostUpdateType = {
@@ -242,6 +258,14 @@ export class Comment extends Struct {
   get json (): CommentData {
     const json = this.get('json') as Text;
     return JSON.parse(json.toString());
+  }
+
+  get upvotes_count (): u16 {
+    return this.get('upvotes_count') as u16;
+  }
+
+  get downvotes_count (): u16 {
+    return this.get('downvotes_count') as u16;
   }
 }
 
