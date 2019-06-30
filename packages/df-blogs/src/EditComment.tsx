@@ -1,5 +1,5 @@
-import React from 'react';
-import { Message } from 'semantic-ui-react';
+import React, { useState } from 'react';
+import { Message, Button } from 'semantic-ui-react';
 import { Form, Field, withFormik, FormikProps } from 'formik';
 import * as Yup from 'yup';
 
@@ -46,6 +46,7 @@ const LabelledField = JoyForms.LabelledField<FormValues>();
 const InnerForm = (props: FormProps) => {
   const {
     postId,
+    parentId,
     struct,
     values,
     dirty,
@@ -54,6 +55,9 @@ const InnerForm = (props: FormProps) => {
     setSubmitting,
     resetForm
   } = props;
+
+  const hasParent = parentId !== undefined;
+  const [showReplyButton, setShowReplyButton] = useState(hasParent);
 
   const {
     body
@@ -84,7 +88,7 @@ const InnerForm = (props: FormProps) => {
     const json = JSON.stringify({ body });
 
     if (!struct) {
-      const parentCommentId = new Option(CommentId, null);
+      const parentCommentId = new Option(CommentId, parentId);
       return [ postId, parentCommentId, json ];
     } else if (dirty) {
       const update = new CommentUpdate({
@@ -97,17 +101,21 @@ const InnerForm = (props: FormProps) => {
     }
   };
 
-  const form =
+  const cancelReplyForm = () => {
+    setShowReplyButton(hasParent);
+    resetForm();
+  };
+
+  const form = () => (
     <Form className='ui form JoyForm EditEntityForm'>
 
       <LabelledField name='body' {...props}>
-        <Field component='textarea' id='body' name='body' disabled={isSubmitting} rows={5} placeholder={`Write a comment...`} />
+        <Field component='textarea' id='body' name='body' disabled={isSubmitting} rows={3} placeholder={`Write a comment...`} style={{ minWidth: '40rem' }} />
       </LabelledField>
 
       <LabelledField {...props}>
         <TxButton
           type='submit'
-          size='large'
           label={isNew
             ? `Comment`
             : `Update my comment`
@@ -123,11 +131,28 @@ const InnerForm = (props: FormProps) => {
           txFailedCb={onTxFailed}
           txSuccessCb={onTxSuccess}
         />
+        {hasParent &&
+          <Button
+            type='button'
+            onClick={cancelReplyForm}
+            content='Cancel'
+          />
+        }
       </LabelledField>
-    </Form>;
+    </Form>);
+
+  const replyButton = () => (
+    <Button
+      type='button'
+      onClick={() => setShowReplyButton(false)}
+      content='Reply'
+    />);
 
   return <>
-    {form}
+    {showReplyButton
+      ? replyButton() 
+      : form()
+    }
   </>;
 };
 
@@ -182,7 +207,7 @@ function LoadStruct (props: LoadStructProps) {
   return <Message error className='JoyMainStatus' header='You are not allowed edit this comment.' />;
 }
 
-export const EditComment = withMulti(
+export const EditComment = withMulti<LoadStructProps>(
   LoadStruct,
   withCalls<OuterProps>(
     queryBlogsToProp('commentById',
@@ -190,7 +215,7 @@ export const EditComment = withMulti(
   )
 );
 
-export const NewComment = withMulti(
+export const NewComment = withMulti<OuterProps>(
   EditForm,
   withOnlyMembers
 );
