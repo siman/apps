@@ -1,9 +1,10 @@
-import { Option, Struct } from '@polkadot/types/codec';
+import { Option, Struct, Enum } from '@polkadot/types/codec';
 import { getTypeRegistry, BlockNumber, Moment, AccountId, u16, u64, Text, Vector } from '@polkadot/types';
 
 export class BlogId extends u64 {}
 export class PostId extends u64 {}
 export class CommentId extends u64 {}
+export class ReactionId extends u64 {}
 
 export type ChangeType = {
   account: AccountId,
@@ -281,6 +282,48 @@ export class CommentUpdate extends Struct {
   }
 }
 
+export const ReactionKinds: { [key: string ]: string } = {
+  Upvote: 'Upvote',
+  Downvote: 'Downvote'
+};
+
+export class ReactionKind extends Enum {
+  constructor (value?: any) {
+    super([
+      'Upvote',
+      'Downvote'
+    ], value);
+  }
+}
+
+export type ReactionType = {
+  id: ReactionId,
+  created: Change,
+  kind: ReactionKind
+};
+
+export class Reaction extends Struct {
+  constructor (value?: CommentType) {
+    super({
+      id: ReactionId,
+      created: Change,
+      kind: ReactionKind
+    }, value);
+  }
+
+  get id (): ReactionId {
+    return this.get('id') as ReactionId;
+  }
+
+  get created (): Change {
+    return this.get('created') as Change;
+  }
+
+  get kind (): ReactionKind {
+    return this.get('kind') as ReactionKind;
+  }
+}
+
 export function registerBlogsTypes () {
   try {
     const typeRegistry = getTypeRegistry();
@@ -288,13 +331,16 @@ export function registerBlogsTypes () {
       BlogId,
       PostId,
       CommentId,
+      ReactionId,
       Change,
       Blog,
       BlogUpdate,
       Post,
       PostUpdate,
       Comment,
-      CommentUpdate
+      CommentUpdate,
+      ReactionKind,
+      Reaction
     });
   } catch (err) {
     console.error('Failed to register custom types of blogs module', err);
