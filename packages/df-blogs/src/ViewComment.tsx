@@ -1,26 +1,25 @@
-import React, { useState, useEffect } from 'react'
-import { Comment as SuiComment } from 'semantic-ui-react'
+import React, { useState, useEffect } from 'react';
+import { Comment as SuiComment } from 'semantic-ui-react';
+import { partition } from 'lodash';
 
+import { ApiProps } from '@polkadot/ui-api/types';
 import { withCalls, withMulti, withApi } from '@polkadot/ui-api/with';
 
-import { PostId, CommentId, Comment, OptionComment } from './types';
-import { queryBlogsToProp } from './utils';
 import Section from '@polkadot/joy-utils/Section';
-
-import { NewComment } from './EditComment';
 import AddressMini from '@polkadot/ui-app/AddressMiniJoy';
-import { partition } from 'lodash';
-import { ApiProps } from '@polkadot/ui-api/types';
+import { queryBlogsToProp } from './utils';
+import { PostId, CommentId, Comment, OptionComment } from './types';
+import { NewComment } from './EditComment';
 
 type Props = ApiProps & {
   postId: PostId,
   commentIds?: CommentId[]
 };
 
-const renderViewComments = (comments:[Comment[],Comment[]]) => {
-  return comments[0].map((comment, i) =>
-   <ViewComment key={i} comment={comment} commentsWithParentId={comments[1]}/>)
-}
+const renderLevelOfComments = (parentComments: Comment[], childrenComments: Comment[]) => {
+  return parentComments.map((comment, i) =>
+   <ViewComment key={i} comment={comment} commentsWithParentId={childrenComments}/>);
+};
 
 function InnerCommentsByPost (props: Props) {
   const {
@@ -37,7 +36,7 @@ function InnerCommentsByPost (props: Props) {
     const loadComments = async () => {
       if (commentsCount === 0) return;
 
-      const apiCalls: Promise<OptionComment>[] = commentIds.map( id =>
+      const apiCalls: Promise<OptionComment>[] = commentIds.map(id =>
         api.query.blogs.commentById(id) as Promise<OptionComment>);
 
       const loadedComments = (await Promise.all<OptionComment>(apiCalls)).map(x => x.unwrap() as Comment);
@@ -47,32 +46,27 @@ function InnerCommentsByPost (props: Props) {
     };
 
     loadComments();
-  }, [ commentsCount ]);//TODO change dependense on post.comments_counts or CommentCreated, CommentUpdated with current postId
-  
-  const renderView = () => (
-    <Section title={`Comments (${commentsCount})`} className='DfCommentsByPost'>
-      <NewComment postId={postId} />
-      {commentsCount
-        ? renderComments() 
-        : <em>No comments yet</em>
-      }
-    </Section>);
-
-  if (!commentsCount) {
-    return renderView();
-  }
-
+  }, [ commentsCount ]);// TODO change dependense on post.comments_counts or CommentCreated, CommentUpdated with current postId
 
   const renderComments = () => {
-    if (!loaded) {
-      return <em>Loading comments...</em>;
+    if (!commentsCount) {
+      return null;
     }
 
-    const rootComments = partition(comments, (e) => {return e.parent_id.isNone});
-    return renderViewComments(rootComments);
+    if (!loaded) {
+      return <div style={{ marginTop: '1rem' }}><em>Loading comments...</em></div>;
+    }
+
+    const [parentComments, childrenComments] = partition(comments, e => e.parent_id.isNone);
+    return renderLevelOfComments(parentComments, childrenComments);
   };
 
-  return renderView();
+  return (
+    <Section title={`Comments (${commentsCount})`} className='DfCommentsByPost'>
+      <NewComment postId={postId} />
+      {renderComments()}
+    </Section>
+  );
 }
 
 export const CommentsByPost = withMulti(
@@ -86,7 +80,7 @@ export const CommentsByPost = withMulti(
 type ViewCommentProps = {
   comment: Comment,
   commentsWithParentId: Comment[];
-}
+};
 
 export function ViewComment (props: ViewCommentProps) {
 
@@ -96,8 +90,7 @@ export function ViewComment (props: ViewCommentProps) {
     return null;
   }
 
-  const newCommentsWithParentId = partition(commentsWithParentId, (e) => {
-    return (e.parent_id.toString() == comment.id.toString())});
+  const [parentComments, childrenComments] = partition(commentsWithParentId, (e) => e.parent_id.eq(comment.id));
 
   const { account, block, time } = comment.created;
   const { body } = comment.json;
@@ -115,9 +108,7 @@ export function ViewComment (props: ViewCommentProps) {
           <SuiComment.Action><NewComment postId={comment.post_id} parentId={comment.id} /></SuiComment.Action>
         </SuiComment.Actions>
       </SuiComment.Content>
-      <SuiComment.Group>
-        {renderViewComments(newCommentsWithParentId)}
-      </SuiComment.Group>
+      {renderLevelOfComments(parentComments, childrenComments)}
     </SuiComment>
   </SuiComment.Group>);
 }
