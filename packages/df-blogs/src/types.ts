@@ -282,6 +282,8 @@ export class CommentUpdate extends Struct {
   }
 }
 
+export class OptionComment extends Option.with(Comment) {}
+
 export const ReactionKinds: { [key: string ]: string } = {
   Upvote: 'Upvote',
   Downvote: 'Downvote'
@@ -346,3 +348,4 @@ export function registerBlogsTypes () {
     console.error('Failed to register custom types of blogs module', err);
   }
 }
+
