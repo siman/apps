@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Button, Message } from 'semantic-ui-react';
+import React from 'react';
+import { Button } from 'semantic-ui-react';
 import { Form, Field, withFormik, FormikProps } from 'formik';
 import * as Yup from 'yup';
 import { History } from 'history';
@@ -9,13 +9,12 @@ import { SubmittableResult } from '@polkadot/api';
 import { withCalls, withMulti } from '@polkadot/ui-api/with';
 
 import * as JoyForms from '@polkadot/joy-utils/forms';
-import { AccountId, Text, Bool } from '@polkadot/types';
-import { Option, Vector } from '@polkadot/types/codec';
+import { Text } from '@polkadot/types';
+import { Option } from '@polkadot/types/codec';
 import { PostId, Post, PostData, PostUpdate, BlogId } from './types';
 import Section from '@polkadot/joy-utils/Section';
 import { useMyAccount } from '@polkadot/joy-utils/MyAccountContext';
 import { queryBlogsToProp, UrlHasIdProps } from './utils';
-import { withOnlyMembers } from '@polkadot/joy-utils/MyAccount';
 
 const buildSchema = (p: ValidationProps) => Yup.object().shape({
   title: Yup.string()
@@ -239,7 +238,7 @@ type LoadStructProps = OuterProps & {
 };
 
 function LoadStruct (props: LoadStructProps) {
-  const { state: { address: myAddress } } = useMyAccount();
+  const { state: { address: myAddress } } = useMyAccount(); //TODO maybe remove, becose usles
   const { structOpt } = props;
 
   if (!myAddress || !structOpt) {
@@ -251,13 +250,8 @@ function LoadStruct (props: LoadStructProps) {
   }
 
   const struct = structOpt.unwrap();
-  const isMyStruct = myAddress === struct.created.account.toString();
 
-  if (isMyStruct) {
-    return <EditForm {...props} struct={struct} />;
-  }
-
-  return <Message error className='JoyMainStatus' header='You are not allowed edit this post.' />;
+    return <EditForm {...props} struct={struct}/>;//TODO
 }
 
 export const NewPost = withMulti(

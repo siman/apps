@@ -87,10 +87,10 @@ function Component (props: Props) {
   const postsSectionTitle = () => {
     return <>
       <span style={{ marginRight: '.5rem' }}>Posts ({postsCount})</span>
-      <Link to={`/blogs/${id}/newPost`} className='ui tiny button'>
+      {isMyBlog && <Link to={`/blogs/${id}/newPost`} className='ui tiny button'>
         <i className='plus icon' />
         Write post
-      </Link>
+      </Link>}
     </>;
   };
 

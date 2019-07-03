@@ -1,15 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { Comment as SuiComment } from 'semantic-ui-react';
-import { partition } from 'lodash';
+import { Comment as SuiComment, Button } from 'semantic-ui-react'
+import React, { useState, useEffect } from 'react'
 
 import { ApiProps } from '@polkadot/ui-api/types';
 import { withCalls, withMulti, withApi } from '@polkadot/ui-api/with';
 
 import Section from '@polkadot/joy-utils/Section';
 import AddressMini from '@polkadot/ui-app/AddressMiniJoy';
-import { queryBlogsToProp } from './utils';
+import { MyAccountProps } from '@polkadot/joy-utils/MyAccount';
+import { useMyAccount } from '@polkadot/joy-utils/MyAccountContext';
+import { ApiProps } from '@polkadot/ui-api/types';
+import { partition } from 'lodash';
 import { PostId, CommentId, Comment, OptionComment } from './types';
 import { NewComment } from './EditComment';
+import { queryBlogsToProp } from './utils';
 
 type Props = ApiProps & {
   postId: PostId,
@@ -46,7 +49,16 @@ function InnerCommentsByPost (props: Props) {
     };
 
     loadComments();
-  }, [ commentsCount ]);// TODO change dependense on post.comments_counts or CommentCreated, CommentUpdated with current postId
+  }, [ commentsCount,  ]);//TODO change dependense on post.comments_counts or CommentCreated, CommentUpdated with current postId
+  
+  const renderView = () => (
+    <Section title={`Comments (${commentsCount})`} className='DfCommentsByPost'>
+      <NewComment postId={postId} />
+      {commentsCount
+        ? renderComments() 
+      }
+        : <em>No comments yet</em>
+    </Section>);
 
   const renderComments = () => {
     if (!commentsCount) {
@@ -84,9 +96,11 @@ type ViewCommentProps = {
 
 export function ViewComment (props: ViewCommentProps) {
 
+  const [showEditForm, setShowEditForm] = useState(false);
   const { comment, commentsWithParentId } = props;
-
-  if (!comment || comment.isEmpty) {
+  const { state: { address: myAddress } } = useMyAccount();
+  
+  if (!comment || comment.isEmpty) { 
     return null;
   }
 
@@ -95,18 +109,32 @@ export function ViewComment (props: ViewCommentProps) {
   const { account, block, time } = comment.created;
   const { body } = comment.json;
 
+  const isMyStruct = myAddress === account.toString();
+
+  const renderButtonEditForm = () =>{
+    if(isMyStruct && !showEditForm){
+      return <Button
+        type='button'
+        onClick={() => setShowEditForm(true)}
+        content='Edit'
+      />
+    }
+    return null;
+  }
+
   return(
   <SuiComment.Group threaded>
     <SuiComment>
       <AddressMini value={account} isShort={false} isPadded={false} withName/>
+      {renderButtonEditForm()}
       <SuiComment.Metadata>
           <div>{time.toLocaleString()} at block #{block.toNumber()}</div>
         </SuiComment.Metadata>
       <SuiComment.Content>
-        <SuiComment.Text>{body}</SuiComment.Text>
+        {showEditForm ? <NewComment struct={comment} id={comment.id} postId={comment.post_id} cancelEditForm={()=>setShowEditForm(false)}/>:<><SuiComment.Text>{body}</SuiComment.Text>
         <SuiComment.Actions>
           <SuiComment.Action><NewComment postId={comment.post_id} parentId={comment.id} /></SuiComment.Action>
-        </SuiComment.Actions>
+        </SuiComment.Actions></>}
       </SuiComment.Content>
       {renderLevelOfComments(parentComments, childrenComments)}
     </SuiComment>

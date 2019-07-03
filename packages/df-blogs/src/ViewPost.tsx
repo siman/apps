@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useContext} from 'react';
 import { Link } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import { Segment } from 'semantic-ui-react';
@@ -37,9 +37,10 @@ function ViewPostInternal (props: ViewPostProps) {
     json: { title, body, image, tags }
   } = post;
 
-  // TODO show 'Edit' button only if I am owner
+  const isMyStruct = myAddress === account.toString();
+
   const editPostBtn = () => (
-    <Link
+    isMyStruct && <Link
       to={`/blogs/posts/${id.toString()}/edit`}
       className='ui small button'
       style={{ marginLeft: '.5rem' }}

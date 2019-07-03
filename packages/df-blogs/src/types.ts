@@ -348,4 +348,3 @@ export function registerBlogsTypes () {
     console.error('Failed to register custom types of blogs module', err);
   }
 }
-

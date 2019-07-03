@@ -131,12 +131,17 @@ const InnerForm = (props: FormProps) => {
           txFailedCb={onTxFailed}
           txSuccessCb={onTxSuccess}
         />
-        {hasParent &&
+        {hasParent ? 
           <Button
             type='button'
             onClick={cancelReplyForm}
             content='Cancel'
-          />
+          /> : !isNew ? 
+          <Button
+            type='button'
+            onClick={props.cancelEditForm} //TODO change props on HOOKS  with Contex
+            content='Cancel'
+          /> : <></>
         }
       </LabelledField>
     </Form>);
@@ -198,13 +203,9 @@ function LoadStruct (props: LoadStructProps) {
   }
 
   const struct = structOpt.unwrap();
-  const isMyStruct = myAddress === struct.created.account.toString();
 
-  if (isMyStruct) {
     return <EditForm {...props} struct={struct} />;
-  }
 
-  return <Message error className='JoyMainStatus' header='You are not allowed edit this comment.' />;
 }
 
 export const EditComment = withMulti<LoadStructProps>(
