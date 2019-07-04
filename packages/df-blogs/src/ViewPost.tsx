@@ -1,4 +1,4 @@
-import React, {useContext} from 'react';
+import React, { useContext, useReducer, createContext } from 'react';
 import { Link } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import { Segment } from 'semantic-ui-react';
@@ -78,7 +78,7 @@ function ViewPostInternal (props: ViewPostProps) {
         <ReactMarkdown className='JoyMemo--full' source={body} linkTarget='_blank' />
         {/* TODO render tags */}
       </div>
-      <CommentsByPost postId={post.id}/>
+        <CommentsByPost postId={post.id}/>
     </>;
   };
   return preview

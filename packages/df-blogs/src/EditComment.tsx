@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Message, Button } from 'semantic-ui-react';
+import { Button } from 'semantic-ui-react';
 import { Form, Field, withFormik, FormikProps } from 'formik';
 import * as Yup from 'yup';
 
@@ -14,6 +14,7 @@ import { PostId, CommentId, Comment, CommentUpdate, CommentData } from './types'
 import { useMyAccount } from '@polkadot/joy-utils/MyAccountContext';
 import { queryBlogsToProp } from './utils';
 import { withOnlyMembers } from '@polkadot/joy-utils/MyAccount';
+import { useCommentUpdate } from './ViewComment';
 
 const buildSchema = (p: ValidationProps) => Yup.object().shape({
 
@@ -32,7 +33,8 @@ type OuterProps = ValidationProps & {
   postId: PostId,
   parentId?: CommentId,
   id?: CommentId, 
-  struct?: Comment
+  struct?: Comment,
+  cancelEditForm: () => void
 };
 
 type FormValues = CommentData;
@@ -53,11 +55,13 @@ const InnerForm = (props: FormProps) => {
     isValid,
     isSubmitting,
     setSubmitting,
-    resetForm
+    resetForm,
+    cancelEditForm
   } = props;
 
   const hasParent = parentId !== undefined;
   const [showReplyButton, setShowReplyButton] = useState(hasParent);
+
 
   const {
     body
@@ -75,12 +79,17 @@ const InnerForm = (props: FormProps) => {
     setSubmitting(false);
   };
 
+  const { dispatch } = useCommentUpdate();
+  const isNew = struct === undefined;
+
   const onTxSuccess = (_txResult: SubmittableResult) => {
     setSubmitting(false);
+    if(!isNew){
+      dispatch({type: 'set', commentId: struct.id });
+    }
+    cancelButtonOnClick();;
     resetForm();
   };
-
-  const isNew = struct === undefined;
 
   const buildTxParams = () => {
     if (!isValid) return [];
@@ -106,7 +115,17 @@ const InnerForm = (props: FormProps) => {
     resetForm();
   };
 
+  const cancelButtonOnClick = () =>{
+    if(hasParent){
+      cancelReplyForm();
+    }
+    else if(!isNew){
+      cancelEditForm();
+    }
+  }
+  
   const form = () => (
+    
     <Form className='ui form JoyForm EditEntityForm'>
 
       <LabelledField name='body' {...props}>
@@ -131,18 +150,11 @@ const InnerForm = (props: FormProps) => {
           txFailedCb={onTxFailed}
           txSuccessCb={onTxSuccess}
         />
-        {hasParent ? 
           <Button
             type='button'
-            onClick={cancelReplyForm}
+            onClick={cancelButtonOnClick}
             content='Cancel'
-          /> : !isNew ? 
-          <Button
-            type='button'
-            onClick={props.cancelEditForm} //TODO change props on HOOKS  with Contex
-            content='Cancel'
-          /> : <></>
-        }
+          />
       </LabelledField>
     </Form>);
 
