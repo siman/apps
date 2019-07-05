@@ -6,7 +6,6 @@ import Section from '@polkadot/joy-utils/Section';
 import AddressMini from '@polkadot/ui-app/AddressMiniJoy';
 import { useMyAccount } from '@polkadot/joy-utils/MyAccountContext';
 import { ApiProps } from '@polkadot/ui-api/types';
-import { Option } from '@polkadot/types/codec';
 import { ApiPromise } from '@polkadot/api';
 import { api } from '@polkadot/ui-api';
 
@@ -14,7 +13,6 @@ import { partition } from 'lodash';
 import { PostId, CommentId, Comment, OptionComment, Post } from './types';
 import { NewComment } from './EditComment';
 import { queryBlogsToProp } from './utils';
-import { CommentUpdateProvider, useCommentUpdate } from './CommentContext';
 import { Voter } from './Voter';
 
 type Props = ApiProps & {
@@ -32,18 +30,17 @@ function InnerCommentsByPost (props: Props) {
   const {
     api,
     postId,
-    post,
     commentIds = []
   } = props;
 
-  const commentsCount = post.comments_count.toNumber();
+  const commentsCount = commentIds.length;//post.comments_count.toNumber();
   const [loaded, setLoaded] = useState(false);
   const [comments, setComments] = useState(new Array<Comment>());
 
   useEffect(() => {
     const loadComments = async () => {
       if (!commentsCount) return;
-
+      console.log("CommentsByPost");
       const apiCalls: Promise<OptionComment>[] = commentIds.map(id =>
         api.query.blogs.commentById(id) as Promise<OptionComment>);
 
@@ -70,14 +67,12 @@ function InnerCommentsByPost (props: Props) {
   };
 
   return (
-    <CommentUpdateProvider>
       <Section title={`Comments (${commentsCount})`} className='DfCommentsByPost'>
         <div style={{ marginBottom: '2rem' }}> 
           <NewComment postId={postId} />
         </div>
         {renderComments()}
-      </Section>
-    </CommentUpdateProvider>);
+      </Section>);
 }
 
 export const CommentsByPost = withMulti(
@@ -97,40 +92,33 @@ type ViewCommentProps = {
 export function ViewComment (props: ViewCommentProps) {
 
   const [showEditForm, setShowEditForm] = useState(false);
+  const [showReplyForm, setShowReplyForm] = useState(false);
+  const [commentIdForUpdate, setCommentIdForUpdate] = useState(new CommentId(0));
+
   const { api, comment, commentsWithParentId } = props;
   const { state: { address: myAddress } } = useMyAccount();
-  const { state: { updatedCommentIds }, dispatch } = useCommentUpdate();
   const [parentComments, childrenComments] = partition(commentsWithParentId, (e) => e.parent_id.eq(comment.id));
 
-  const { id, created:{ account, block, time }, upvotes_count, downvotes_count } = comment;
+  const { id, created:{ account, block, time } } = comment;
   const [ text , setText ] = useState(comment.json.body);
 
   if (!comment || comment.isEmpty) { 
     return null;
   }
 
-  useEffect(() => {
+  useEffect(() => { 
+      if (!commentIdForUpdate.eq(id)) return;
 
-    const reloadComment = async () => {
-      if (!updatedCommentIds) return;
+      console.log("Comment reload");
+ 
+       api.query.blogs.commentById(commentIdForUpdate, (x => {
+          if (x.isNone) return;
+          const comment = x.unwrap() as Comment;
+          setText(comment.json.body);
+          setCommentIdForUpdate(new CommentId(0));
+        }));
 
-      const commentIdForUpdate = updatedCommentIds.find(otherId => otherId.eq(id));
-      if (!commentIdForUpdate) return;
-
-      const apiCalls: Promise<Option<Comment>> = 
-        api.query.blogs.commentById(commentIdForUpdate) as Promise<Option<Comment>>;
-
-      const loadedCommentOpt = await apiCalls;
-      if (loadedCommentOpt.isNone) return;
-
-      const loadedComment = loadedCommentOpt.unwrap();
-
-      setText(loadedComment.json.body);
-      dispatch({ type: 'removeUpdatedComment', commentId: loadedComment.id });
-    };
-
-    reloadComment();
-  },[ updatedCommentIds.length ]);
+  },[ commentIdForUpdate.toString() && !commentIdForUpdate.eqn(0) ]);
 
   const isMyStruct = myAddress === account.toString();
 
@@ -145,6 +133,14 @@ export function ViewComment (props: ViewCommentProps) {
         Edit
       </Button>;
   };
+
+  const replyButton = () => (
+    <Button
+      type='button'
+      basic
+      onClick={() => setShowReplyForm(true)}
+      content='Reply'
+    />);
 
   return <div>
   <SuiComment.Group threaded>
@@ -163,13 +159,20 @@ export function ViewComment (props: ViewCommentProps) {
                 struct={comment}
                 id={comment.id}
                 postId={comment.post_id}
-                cancelEditForm={()=>setShowEditForm(false)}
+                onSuccess={()=> { setShowEditForm(false); setCommentIdForUpdate(id); }}
               />
               : <>
                 <SuiComment.Text>{text}</SuiComment.Text>
                 <SuiComment.Actions>
                   <SuiComment.Action>
-                    <NewComment postId={comment.post_id} parentId={comment.id} />
+                    {showReplyForm 
+                      ? <NewComment
+                          postId={comment.post_id}
+                          parentId={comment.id}
+                          onSuccess={() => setShowReplyForm(false)}
+                        />
+                      : replyButton()
+                    }
                   </SuiComment.Action>
                 </SuiComment.Actions>
               </>}
