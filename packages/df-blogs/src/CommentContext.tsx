@@ -3,27 +3,32 @@ import React, { useContext, createContext, useReducer } from 'react'
 import { CommentId } from './types';
 
 type CommentsUpdateAction = {
-  type: 'addUpdatedComment' | 'removeUpdatedComment',
+  type:  'commentReplied' | 'reloadComment' | 'cleanCommentMode',
   commentId: CommentId
 };
 
+type CommentMode = 'replied' | 'reload';
+
 type CommentsUpdateState = {
-  updatedCommentIds: CommentId[]
+  commentModeMap: Map<string, CommentMode>
 };
 
 function reducer (state: CommentsUpdateState, action: CommentsUpdateAction) {
+  const { commentModeMap } = state;
+  const id = action.commentId.toString();
+
   switch (action.type) {
-    case 'addUpdatedComment': {
-      const returnState: CommentsUpdateState = {
-        updatedCommentIds: [ ...state.updatedCommentIds, action.commentId ]
-      }
-      return returnState;
+    case 'commentReplied': {
+      commentModeMap.set(id, 'replied');
+      return { commentModeMap: new Map(commentModeMap) };
     }
-    case 'removeUpdatedComment': {
-      const returnState: CommentsUpdateState = {
-        updatedCommentIds: state.updatedCommentIds.filter(id => id.eq(action.commentId))
-      }
-      return returnState;
+    case 'reloadComment': {
+      commentModeMap.set(id, 'reload');
+      return { commentModeMap: new Map(commentModeMap) };
+    }
+    case 'cleanCommentMode': {
+      commentModeMap.delete(id);
+      return { commentModeMap: new Map(commentModeMap) };
     }
     default: {
       console.log('Unknown action type:', action.type);
@@ -41,7 +46,7 @@ export type commentUpdateContextProps = {
   dispatch: React.Dispatch<CommentsUpdateAction>
 };
 const initialStateCommentsUpdate: CommentsUpdateState = {
-  updatedCommentIds: [] as CommentId[]
+  commentModeMap: new Map()
 };
 
 const InitialContext: commentUpdateContextProps = {
@@ -53,7 +58,7 @@ export const MyCommenrUpdate = createContext<commentUpdateContextProps>(InitialC
 
 export function CommentUpdateProvider (props: React.PropsWithChildren<{}>) {
   
-  const [state, dispatch] = useReducer(reducer,initialStateCommentsUpdate);
+  const [state, dispatch] = useReducer(reducer, initialStateCommentsUpdate);
 
   const contextValue = {
     state,
@@ -66,6 +71,6 @@ export function CommentUpdateProvider (props: React.PropsWithChildren<{}>) {
   );
 }
 
-export function useCommentUpdate () {
+export function useCommentContext () {
   return useContext(MyCommenrUpdate);
 }

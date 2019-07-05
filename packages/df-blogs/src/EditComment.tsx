@@ -14,7 +14,7 @@ import { PostId, CommentId, Comment, CommentUpdate, CommentData } from './types'
 import { useMyAccount } from '@polkadot/joy-utils/MyAccountContext';
 import { queryBlogsToProp } from './utils';
 import { withOnlyMembers } from '@polkadot/joy-utils/MyAccount';
-import { useCommentUpdate } from './CommentContext';
+import { useCommentContext } from './CommentContext';
 
 const buildSchema = (p: ValidationProps) => Yup.object().shape({
 
@@ -33,8 +33,7 @@ type OuterProps = ValidationProps & {
   postId: PostId,
   parentId?: CommentId,
   id?: CommentId, 
-  struct?: Comment,
-  cancelEditForm: () => void
+  struct?: Comment
 };
 
 type FormValues = CommentData;
@@ -55,13 +54,13 @@ const InnerForm = (props: FormProps) => {
     isValid,
     isSubmitting,
     setSubmitting,
-    resetForm,
-    cancelEditForm
+    resetForm
   } = props;
 
+  const { dispatch } = useCommentContext();
   const hasParent = parentId !== undefined;
-  const [showReplyButton, setShowReplyButton] = useState(hasParent);
-
+  // const isEditingMyComment = commentModeMap.get(struct ? struct.id.toString() : '') === 'edit';
+  // const showEditor = !hasParent || isEditingMyComment;
 
   const {
     body
@@ -79,15 +78,18 @@ const InnerForm = (props: FormProps) => {
     setSubmitting(false);
   };
 
-  const { dispatch } = useCommentUpdate();
   const isNew = struct === undefined;
 
   const onTxSuccess = (_txResult: SubmittableResult) => {
     setSubmitting(false);
     resetForm();
-    
+
+    if (parentId && !struct) {
+      dispatch({ type: 'commentReplied', commentId: parentId });
+    }
+
     if (struct) {
-      dispatch({type: 'addUpdatedComment', commentId: struct.id });
+      dispatch({ type: 'reloadComment', commentId: struct.id });
       cancelForm();
     }
   };
@@ -112,7 +114,10 @@ const InnerForm = (props: FormProps) => {
   };
 
   const cancelReplyForm = () => {
-    setShowReplyButton(hasParent);
+    //setShowReplyButton(hasParent);
+    if (struct) {
+      dispatch({ type: 'cleanCommentMode', commentId: struct.id });
+    }
     resetForm();
   };
 
@@ -122,8 +127,7 @@ const InnerForm = (props: FormProps) => {
     }
     else if (!isNew) {
       // TODO Find better solution to close this form
-      cancelEditForm();
-      //setShowReplyButton(true); 
+      // .... finish
     }
   }
   
@@ -161,20 +165,7 @@ const InnerForm = (props: FormProps) => {
       </LabelledField>
     </Form>);
 
-  const replyButton = () => (
-    <Button
-      type='button'
-      basic
-      onClick={() => setShowReplyButton(false)}
-      content='Reply'
-    />);
-
-  return <>
-    {showReplyButton
-      ? replyButton() 
-      : form()
-    }
-  </>;
+  return form();
 };
 
 const EditForm = withFormik<OuterProps, FormValues>({

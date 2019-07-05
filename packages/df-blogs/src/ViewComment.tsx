@@ -14,7 +14,7 @@ import { partition } from 'lodash';
 import { PostId, CommentId, Comment, OptionComment, Post } from './types';
 import { NewComment } from './EditComment';
 import { queryBlogsToProp } from './utils';
-import { CommentUpdateProvider, useCommentUpdate } from './CommentContext';
+import { CommentUpdateProvider, useCommentContext } from './CommentContext';
 import { Voter } from './Voter';
 
 type Props = ApiProps & {
@@ -36,7 +36,7 @@ function InnerCommentsByPost (props: Props) {
     commentIds = []
   } = props;
 
-  const commentsCount = post.comments_count.toNumber();
+  const commentsCount = commentIds.length //post.comments_count.toNumber();
   const [loaded, setLoaded] = useState(false);
   const [comments, setComments] = useState(new Array<Comment>());
 
@@ -96,55 +96,70 @@ type ViewCommentProps = {
 
 export function ViewComment (props: ViewCommentProps) {
 
-  const [showEditForm, setShowEditForm] = useState(false);
   const { api, comment, commentsWithParentId } = props;
-  const { state: { address: myAddress } } = useMyAccount();
-  const { state: { updatedCommentIds }, dispatch } = useCommentUpdate();
-  const [parentComments, childrenComments] = partition(commentsWithParentId, (e) => e.parent_id.eq(comment.id));
-
   const { id, created:{ account, block, time }, upvotes_count, downvotes_count } = comment;
+
+  const { state: { address: myAddress } } = useMyAccount();
+  const { state: { commentModeMap }, dispatch } = useCommentContext();
+
+  console.log({ commentModeMap });
+
+  const [ showEditForm, setShowEditForm ] = useState(false); //commentModeMap.has(id.toString());
+  const [ showReplyForm, setShowReplyForm ] = useState(false);
   const [ text , setText ] = useState(comment.json.body);
+  const [ parentComments, childrenComments ] = partition(commentsWithParentId, e => e.parent_id.eq(comment.id));
 
   if (!comment || comment.isEmpty) { 
     return null;
   }
 
+  if (commentModeMap.get(id.toString()) === 'replied') {
+    setShowReplyForm(false);
+    // dispatch({ type: 'cleanCommentMode', commentId: id });
+  }
+
   useEffect(() => {
 
+    console.log('here');
     const reloadComment = async () => {
-      if (!updatedCommentIds) return;
-
-      const commentIdForUpdate = updatedCommentIds.find(otherId => otherId.eq(id));
-      if (!commentIdForUpdate) return;
-
-      const apiCalls: Promise<Option<Comment>> = 
-        api.query.blogs.commentById(commentIdForUpdate) as Promise<Option<Comment>>;
-
-      const loadedCommentOpt = await apiCalls;
+      if (!commentModeMap || !commentModeMap.has(id.toString())) return;
+      console.log('here2');
+      const loadedCommentOpt = (await api.query.blogs.commentById(id)) as Option<Comment>;
       if (loadedCommentOpt.isNone) return;
 
       const loadedComment = loadedCommentOpt.unwrap();
-
       setText(loadedComment.json.body);
-      dispatch({ type: 'removeUpdatedComment', commentId: loadedComment.id });
+      dispatch({ type: 'cleanCommentMode', commentId: id });
+      setShowEditForm(false);
     };
 
     reloadComment();
-  },[ updatedCommentIds.length ]);
+  }, [ commentModeMap.size > 0 ]);
 
   const isMyStruct = myAddress === account.toString();
 
   const renderButtonEditForm = () => { 
     if (!isMyStruct || showEditForm) return null;
 
-    return <Button
-      type='button'
-      basic
-      onClick={() => setShowEditForm(true)}>
+    return (
+      <Button
+        type='button'
+        basic
+        onClick={() => setShowEditForm(true)}
+      >
         <Icon name='pencil'/>
         Edit
-      </Button>;
+      </Button>
+    );
   };
+
+  const replyButton = () => (
+    <Button
+      type='button'
+      basic
+      onClick={() => setShowReplyForm(true)}
+      content='Reply'
+    />);
 
   return <div>
   <SuiComment.Group threaded>
@@ -163,13 +178,15 @@ export function ViewComment (props: ViewCommentProps) {
                 struct={comment}
                 id={comment.id}
                 postId={comment.post_id}
-                cancelEditForm={()=>setShowEditForm(false)}
               />
               : <>
                 <SuiComment.Text>{text}</SuiComment.Text>
                 <SuiComment.Actions>
                   <SuiComment.Action>
-                    <NewComment postId={comment.post_id} parentId={comment.id} />
+                    {showReplyForm
+                      ? <NewComment postId={comment.post_id} parentId={comment.id} />
+                      : replyButton()
+                    }
                   </SuiComment.Action>
                 </SuiComment.Actions>
               </>}
