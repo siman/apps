@@ -11,13 +11,15 @@ import { ApiPromise } from '@polkadot/api';
 import { api } from '@polkadot/ui-api';
 
 import { partition } from 'lodash';
-import { PostId, CommentId, Comment, OptionComment } from './types';
+import { PostId, CommentId, Comment, OptionComment, Post } from './types';
 import { NewComment } from './EditComment';
 import { queryBlogsToProp } from './utils';
 import { CommentUpdateProvider, useCommentUpdate } from './CommentContext';
+import { Voter } from './Voter';
 
 type Props = ApiProps & {
   postId: PostId,
+  post: Post,
   commentIds?: CommentId[]
 };
 
@@ -30,16 +32,17 @@ function InnerCommentsByPost (props: Props) {
   const {
     api,
     postId,
+    post,
     commentIds = []
   } = props;
 
-  const commentsCount = commentIds ? commentIds.length : 0;
+  const commentsCount = post.comments_count.toNumber();
   const [loaded, setLoaded] = useState(false);
   const [comments, setComments] = useState(new Array<Comment>());
 
   useEffect(() => {
     const loadComments = async () => {
-      if (commentsCount === 0) return;
+      if (!commentsCount) return;
 
       const apiCalls: Promise<OptionComment>[] = commentIds.map(id =>
         api.query.blogs.commentById(id) as Promise<OptionComment>);
@@ -69,7 +72,9 @@ function InnerCommentsByPost (props: Props) {
   return (
     <CommentUpdateProvider>
       <Section title={`Comments (${commentsCount})`} className='DfCommentsByPost'>
-        <NewComment postId={postId} />
+        <div style={{ marginBottom: '2rem' }}> 
+          <NewComment postId={postId} />
+        </div>
         {renderComments()}
       </Section>
     </CommentUpdateProvider>);
@@ -97,7 +102,7 @@ export function ViewComment (props: ViewCommentProps) {
   const { state: { updatedCommentIds }, dispatch } = useCommentUpdate();
   const [parentComments, childrenComments] = partition(commentsWithParentId, (e) => e.parent_id.eq(comment.id));
 
-  const { id, created:{ account, block, time } } = comment;
+  const { id, created:{ account, block, time }, upvotes_count, downvotes_count } = comment;
   const [ text , setText ] = useState(comment.json.body);
 
   if (!comment || comment.isEmpty) { 
@@ -134,46 +139,45 @@ export function ViewComment (props: ViewCommentProps) {
 
     return <Button
       type='button'
+      basic
       onClick={() => setShowEditForm(true)}>
         <Icon name='pencil'/>
         Edit
       </Button>;
   };
 
-  // const renderUpAndDownVote = () => {
-  //   return <Button.Group basic vertical className='DfUpAndDownVote'>
-  //     <Button circular compact icon='thumbs up outline' content='0' />
-  //     <Button circular compact icon='thumbs down outline'content='0' />
-  //   </Button.Group>
-  // };
-
-  return (
+  return <div>
   <SuiComment.Group threaded>
     <SuiComment>
-      {/* {renderUpAndDownVote()} */}
-      <AddressMini value={account} isShort={false} isPadded={false} withName/>
-      {renderButtonEditForm()}
-      <SuiComment.Metadata>
-          <div>{time.toLocaleString()} at block #{block.toNumber()}</div>
-        </SuiComment.Metadata>
-      <SuiComment.Content>
-        {showEditForm 
-          ? <NewComment 
-            struct={comment}
-            id={comment.id}
-            postId={comment.post_id}
-            cancelEditForm={()=>setShowEditForm(false)}
-          />
-          : <>
-            <SuiComment.Text>{text}</SuiComment.Text>
-            <SuiComment.Actions>
-              <SuiComment.Action>
-                <NewComment postId={comment.post_id} parentId={comment.id} />
-              </SuiComment.Action>
-            </SuiComment.Actions>
-          </>}
-      </SuiComment.Content>
+      <div className='DfCommentBox'>
+        <Voter struct={comment} />
+        <div>
+          <SuiComment.Metadata>
+            <AddressMini value={account} isShort={false} isPadded={false} withName/>
+            {renderButtonEditForm()}
+            <div>{time.toLocaleString()} at block #{block.toNumber()}</div>
+          </SuiComment.Metadata>
+          <SuiComment.Content>
+            {showEditForm 
+              ? <NewComment 
+                struct={comment}
+                id={comment.id}
+                postId={comment.post_id}
+                cancelEditForm={()=>setShowEditForm(false)}
+              />
+              : <>
+                <SuiComment.Text>{text}</SuiComment.Text>
+                <SuiComment.Actions>
+                  <SuiComment.Action>
+                    <NewComment postId={comment.post_id} parentId={comment.id} />
+                  </SuiComment.Action>
+                </SuiComment.Actions>
+              </>}
+          </SuiComment.Content>
+        </div>
+      </div>
       {renderLevelOfComments(parentComments, childrenComments)}
     </SuiComment>
-  </SuiComment.Group>);
+  </SuiComment.Group>
+</div>;
 }

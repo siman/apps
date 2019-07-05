@@ -8,7 +8,6 @@ type CommentsUpdateAction = {
 };
 
 type CommentsUpdateState = {
-  inited: boolean,
   updatedCommentIds: CommentId[]
 };
 
@@ -16,14 +15,12 @@ function reducer (state: CommentsUpdateState, action: CommentsUpdateAction) {
   switch (action.type) {
     case 'addUpdatedComment': {
       const returnState: CommentsUpdateState = {
-        inited: true,
         updatedCommentIds: [ ...state.updatedCommentIds, action.commentId ]
       }
       return returnState;
     }
     case 'removeUpdatedComment': {
       const returnState: CommentsUpdateState = {
-        inited: true,
         updatedCommentIds: state.updatedCommentIds.filter(id => id.eq(action.commentId))
       }
       return returnState;
@@ -44,7 +41,6 @@ export type commentUpdateContextProps = {
   dispatch: React.Dispatch<CommentsUpdateAction>
 };
 const initialStateCommentsUpdate: CommentsUpdateState = {
-  inited: false,
   updatedCommentIds: [] as CommentId[]
 };
 

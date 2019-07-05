@@ -164,6 +164,7 @@ const InnerForm = (props: FormProps) => {
   const replyButton = () => (
     <Button
       type='button'
+      basic
       onClick={() => setShowReplyButton(false)}
       content='Reply'
     />);

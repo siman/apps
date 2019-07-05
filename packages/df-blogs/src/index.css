@@ -50,6 +50,22 @@
   }
 }
 
+.DfCountsPreview {
+  margin-top: .5rem;
+  font-size: .85rem;
+  .MutedText {
+    margin-right: .5rem;
+  }
+}
+
+.DfCommentBox {
+  display: flex !important;
+  align-items: start;
+}
+.DfVoter.vertical {
+  margin-right: 1rem;
+}
+
 .DfCommentsByPost {
   .ui.comments {
     max-width: 100%;

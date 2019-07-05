@@ -11,6 +11,8 @@ import { queryBlogsToProp, UrlHasIdProps, AuthorPreview } from './utils';
 import { withMyAccount, MyAccountProps } from '@polkadot/joy-utils/MyAccount';
 import { CommentsByPost } from './ViewComment';
 import { CreatedBy } from './CreatedBy'
+import { MutedSpan } from '@polkadot/joy-utils/MutedText';
+import { Voter } from './Voter';
 
 type ViewPostProps = MyAccountProps & {
   preview?: boolean,
@@ -34,7 +36,10 @@ function ViewPostInternal (props: ViewPostProps) {
   const post = postById.unwrap();
   const {
     created: { account },
-    json: { title, body, image }
+    json: { title, body, image },
+    comments_count,
+    upvotes_count,
+    downvotes_count
   } = post;
 
   const isMyStruct = myAddress === account.toString();
@@ -62,6 +67,11 @@ function ViewPostInternal (props: ViewPostProps) {
           {editPostBtn()}
         </h2>
         <AuthorPreview address={account} />
+        <div className='DfCountsPreview'>
+          <MutedSpan>Comments: <b>{comments_count.toString()}</b></MutedSpan>
+          <MutedSpan>Upvotes: <b>{upvotes_count.toString()}</b></MutedSpan>
+          <MutedSpan>Downvotes: <b>{downvotes_count.toString()}</b></MutedSpan>
+        </div>
       </Segment>
     </>;
   };
@@ -78,7 +88,8 @@ function ViewPostInternal (props: ViewPostProps) {
         <ReactMarkdown className='JoyMemo--full' source={body} linkTarget='_blank' />
         {/* TODO render tags */}
       </div>
-      <CommentsByPost postId={post.id} />
+      <Voter struct={post} />
+      <CommentsByPost postId={post.id} post={post} />
     </>;
   };
   return preview
