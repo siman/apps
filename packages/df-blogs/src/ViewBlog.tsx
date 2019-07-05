@@ -1,20 +1,18 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Table } from 'semantic-ui-react';
 import ReactMarkdown from 'react-markdown';
 
 import { withCalls, withMulti } from '@polkadot/ui-api/with';
 import { Option } from '@polkadot/types';
 import IdentityIcon from '@polkadot/ui-app/IdentityIcon';
-import AddressMini from '@polkadot/ui-app/AddressMiniJoy';
-import { formatNumber } from '@polkadot/util';
 
 import { nonEmptyStr } from '@polkadot/joy-utils/index';
 import { BlogId, Blog, PostId } from './types';
 import { queryBlogsToProp } from './utils';
 import { MyAccountProps, withMyAccount } from '@polkadot/joy-utils/MyAccount';
 import Section from '@polkadot/joy-utils/Section';
-import { ViewPost } from './ViewPost';
+import { ViewPost } from './ViewPost'; 
+import { CreatedBy } from './CreatedBy';
 
 type Props = MyAccountProps & {
   preview?: boolean,
@@ -38,9 +36,8 @@ function Component (props: Props) {
   const blog = blogById.unwrap();
   const {
     id,
-    created: { account, time, block },
-    slug,
-    json: { name, desc, image, tags }
+    created: { account },
+    json: { name, desc, image }
   } = blog;
 
   const isMyBlog = myAddress && account && myAddress === account.toString();
@@ -87,10 +84,10 @@ function Component (props: Props) {
   const postsSectionTitle = () => {
     return <>
       <span style={{ marginRight: '.5rem' }}>Posts ({postsCount})</span>
-      <Link to={`/blogs/${id}/newPost`} className='ui tiny button'>
+      {isMyBlog && <Link to={`/blogs/${id}/newPost`} className='ui tiny button'>
         <i className='plus icon' />
         Write post
-      </Link>
+      </Link>}
     </>;
   };
 
@@ -98,20 +95,7 @@ function Component (props: Props) {
     <div className='ui massive relaxed middle aligned list FullProfile'>
       {renderPreview()}
     </div>
-
-    <Table celled selectable compact definition className='ProfileDetailsTable'>
-    <Table.Body>
-      <Table.Row>
-        <Table.Cell>Created on</Table.Cell>
-        <Table.Cell>{new Date(time).toLocaleString()} at block #{formatNumber(block)}</Table.Cell>
-      </Table.Row>
-      <Table.Row>
-        <Table.Cell>Created by</Table.Cell>
-        <Table.Cell><AddressMini value={account} isShort={false} isPadded={false} size={36} withName withBalance /></Table.Cell>
-      </Table.Row>
-    </Table.Body>
-    </Table>
-
+    <CreatedBy created={blog.created} />
     <Section title={postsSectionTitle()}>
       {renderPostPreviews()}
     </Section>
