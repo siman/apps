@@ -14,7 +14,7 @@ import { PostId, CommentId, Comment, CommentUpdate, CommentData } from './types'
 import { useMyAccount } from '@polkadot/joy-utils/MyAccountContext';
 import { queryBlogsToProp } from './utils';
 import { withOnlyMembers } from '@polkadot/joy-utils/MyAccount';
-import { useCommentUpdate } from './ViewComment';
+import { useCommentUpdate } from './CommentContext';
 
 const buildSchema = (p: ValidationProps) => Yup.object().shape({
 
@@ -84,11 +84,12 @@ const InnerForm = (props: FormProps) => {
 
   const onTxSuccess = (_txResult: SubmittableResult) => {
     setSubmitting(false);
-    if(!isNew){
-      dispatch({type: 'set', commentId: struct.id });
-    }
-    cancelButtonOnClick();;
     resetForm();
+    
+    if (struct) {
+      dispatch({type: 'addUpdatedComment', commentId: struct.id });
+      cancelForm();
+    }
   };
 
   const buildTxParams = () => {
@@ -115,12 +116,14 @@ const InnerForm = (props: FormProps) => {
     resetForm();
   };
 
-  const cancelButtonOnClick = () =>{
-    if(hasParent){
+  const cancelForm = () =>{
+    if (hasParent) {
       cancelReplyForm();
     }
-    else if(!isNew){
+    else if (!isNew) {
+      // TODO Find better solution to close this form
       cancelEditForm();
+      //setShowReplyButton(true); 
     }
   }
   
@@ -152,7 +155,7 @@ const InnerForm = (props: FormProps) => {
         />
           <Button
             type='button'
-            onClick={cancelButtonOnClick}
+            onClick={cancelForm}
             content='Cancel'
           />
       </LabelledField>

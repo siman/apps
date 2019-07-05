@@ -1,4 +1,4 @@
-import React, { useContext, useReducer, createContext } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import { Segment } from 'semantic-ui-react';
@@ -10,6 +10,7 @@ import { PostId, Post, CommentId } from './types';
 import { queryBlogsToProp, UrlHasIdProps, AuthorPreview } from './utils';
 import { withMyAccount, MyAccountProps } from '@polkadot/joy-utils/MyAccount';
 import { CommentsByPost } from './ViewComment';
+import { CreatedBy } from './CreatedBy'
 
 type ViewPostProps = MyAccountProps & {
   preview?: boolean,
@@ -32,9 +33,8 @@ function ViewPostInternal (props: ViewPostProps) {
 
   const post = postById.unwrap();
   const {
-    created: { account, time, block },
-    slug,
-    json: { title, body, image, tags }
+    created: { account },
+    json: { title, body, image }
   } = post;
 
   const isMyStruct = myAddress === account.toString();
@@ -72,13 +72,13 @@ function ViewPostInternal (props: ViewPostProps) {
         <span style={{ marginRight: '.5rem' }}>{title}</span>
         {editPostBtn()}
       </h1>
-      <AuthorPreview address={account} />
+      <CreatedBy created={post.created} />
       <div style={{ margin: '1rem 0' }}>
         {image && <img src={image} className='DfPostImage' /* add onError handler */ />}
         <ReactMarkdown className='JoyMemo--full' source={body} linkTarget='_blank' />
         {/* TODO render tags */}
       </div>
-        <CommentsByPost postId={post.id}/>
+      <CommentsByPost postId={post.id} />
     </>;
   };
   return preview

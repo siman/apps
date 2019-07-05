@@ -1,19 +1,20 @@
-import { Comment as SuiComment, Button } from 'semantic-ui-react'
-import React, { useState, useEffect, useContext, createContext, useReducer } from 'react'
+import { Comment as SuiComment, Button, Icon } from 'semantic-ui-react'
+import React, { useState, useEffect } from 'react'
 
 import { withCalls, withMulti, withApi } from '@polkadot/ui-api/with';
-
 import Section from '@polkadot/joy-utils/Section';
 import AddressMini from '@polkadot/ui-app/AddressMiniJoy';
-
 import { useMyAccount } from '@polkadot/joy-utils/MyAccountContext';
 import { ApiProps } from '@polkadot/ui-api/types';
+import { Option } from '@polkadot/types/codec';
+import { ApiPromise } from '@polkadot/api';
+import { api } from '@polkadot/ui-api';
+
 import { partition } from 'lodash';
 import { PostId, CommentId, Comment, OptionComment } from './types';
 import { NewComment } from './EditComment';
 import { queryBlogsToProp } from './utils';
-import { ApiPromise } from '@polkadot/api';
-import { api } from '@polkadot/ui-api';
+import { CommentUpdateProvider, useCommentUpdate } from './CommentContext';
 
 type Props = ApiProps & {
   postId: PostId,
@@ -93,7 +94,7 @@ export function ViewComment (props: ViewCommentProps) {
   const [showEditForm, setShowEditForm] = useState(false);
   const { api, comment, commentsWithParentId } = props;
   const { state: { address: myAddress } } = useMyAccount();
-  const { state: { commentsUpdateIds, inited }, dispatch } = useCommentUpdate();
+  const { state: { updatedCommentIds }, dispatch } = useCommentUpdate();
   const [parentComments, childrenComments] = partition(commentsWithParentId, (e) => e.parent_id.eq(comment.id));
 
   const { id, created:{ account, block, time } } = comment;
@@ -102,123 +103,77 @@ export function ViewComment (props: ViewCommentProps) {
   if (!comment || comment.isEmpty) { 
     return null;
   }
+
   useEffect(() => {
-    if(!inited){
-      return;
-    }
-    const loadComments = async () => {
-      if (commentsUpdateIds.length === 0) return;
-      let commentIdForUpdate;
-      commentsUpdateIds.forEach((value, index) =>{
-        if (value.toString() === id.toString()){
-          commentIdForUpdate = value;
-      }}); 
-      const apiCalls: Promise<OptionComment> = api.query.blogs.commentById(commentIdForUpdate) as Promise<OptionComment>;
 
-      const loadedComment = (await (apiCalls)).unwrap() as Comment;
-      const { json } = loadedComment;
-      setText(json.body);
-      dispatch({type: 'forget', commentId: {} as CommentId});
-      };
+    const reloadComment = async () => {
+      if (!updatedCommentIds) return;
 
-    loadComments();
-  },[ inited == true ]);
+      const commentIdForUpdate = updatedCommentIds.find(otherId => otherId.eq(id));
+      if (!commentIdForUpdate) return;
+
+      const apiCalls: Promise<Option<Comment>> = 
+        api.query.blogs.commentById(commentIdForUpdate) as Promise<Option<Comment>>;
+
+      const loadedCommentOpt = await apiCalls;
+      if (loadedCommentOpt.isNone) return;
+
+      const loadedComment = loadedCommentOpt.unwrap();
+
+      setText(loadedComment.json.body);
+      dispatch({ type: 'removeUpdatedComment', commentId: loadedComment.id });
+    };
+
+    reloadComment();
+  },[ updatedCommentIds.length ]);
 
   const isMyStruct = myAddress === account.toString();
 
-  const renderButtonEditForm = () =>{
-    if(isMyStruct && !showEditForm){
-      return <Button
-        type='button'
-        onClick={() => setShowEditForm(true)}
-        content='Edit'
-      />
-    }
-    return null;
-  }
-  return(
+  const renderButtonEditForm = () => { 
+    if (!isMyStruct || showEditForm) return null;
+
+    return <Button
+      type='button'
+      onClick={() => setShowEditForm(true)}>
+        <Icon name='pencil'/>
+        Edit
+      </Button>;
+  };
+
+  // const renderUpAndDownVote = () => {
+  //   return <Button.Group basic vertical className='DfUpAndDownVote'>
+  //     <Button circular compact icon='thumbs up outline' content='0' />
+  //     <Button circular compact icon='thumbs down outline'content='0' />
+  //   </Button.Group>
+  // };
+
+  return (
   <SuiComment.Group threaded>
     <SuiComment>
+      {/* {renderUpAndDownVote()} */}
       <AddressMini value={account} isShort={false} isPadded={false} withName/>
       {renderButtonEditForm()}
       <SuiComment.Metadata>
           <div>{time.toLocaleString()} at block #{block.toNumber()}</div>
         </SuiComment.Metadata>
       <SuiComment.Content>
-        {showEditForm ? <NewComment struct={comment} id={comment.id} postId={comment.post_id} cancelEditForm={()=>setShowEditForm(false)}/>:<><SuiComment.Text>{text}</SuiComment.Text>
-        <SuiComment.Actions>
-          <SuiComment.Action><NewComment postId={comment.post_id} parentId={comment.id} /></SuiComment.Action>
-        </SuiComment.Actions></>}
+        {showEditForm 
+          ? <NewComment 
+            struct={comment}
+            id={comment.id}
+            postId={comment.post_id}
+            cancelEditForm={()=>setShowEditForm(false)}
+          />
+          : <>
+            <SuiComment.Text>{text}</SuiComment.Text>
+            <SuiComment.Actions>
+              <SuiComment.Action>
+                <NewComment postId={comment.post_id} parentId={comment.id} />
+              </SuiComment.Action>
+            </SuiComment.Actions>
+          </>}
       </SuiComment.Content>
       {renderLevelOfComments(parentComments, childrenComments)}
     </SuiComment>
   </SuiComment.Group>);
-}
-
-type CommentsUpdateAction = {
-  type: 'set' | 'forget' | 'forgetExact',
-  commentId: CommentId
-};
-type CommentsUpdateState = {
-  inited: boolean,
-  commentsUpdateIds: CommentId[]
-};
-function reducer (state: CommentsUpdateState, action: CommentsUpdateAction ) {
-  switch (action.type) {
-    case 'set':{
-      const returnState: CommentsUpdateState = {
-        inited: true,
-        commentsUpdateIds: [ ...state.commentsUpdateIds, action.commentId ]
-      }
-      return returnState;
-    }
-    case 'forget':{
-      const returnState: CommentsUpdateState = {
-        inited: false,
-        commentsUpdateIds: [action.commentId]
-      }
-      return returnState;
-    }
-    default:
-      return state;
-  }
-}
-
-function functionStub () {
-  throw new Error('Function needs to be set in Provider');
-}
-
-export type commentUpdateContextProps = {
-  state: CommentsUpdateState,
-  dispatch: React.Dispatch<CommentsUpdateAction>
-};
-const initialStateCommentsUpdate: CommentsUpdateState = {
-  inited: false,
-  commentsUpdateIds: [] as CommentId[]
-};
-
-const InitialContext: commentUpdateContextProps = {
-  state: initialStateCommentsUpdate,
-  dispatch: functionStub
-};
-
-export const MyCommenrUpdate = createContext<commentUpdateContextProps>(InitialContext);
-
-export function CommentUpdateProvider (props: React.PropsWithChildren<{}>) {
-  
-  const [state, dispatch] = useReducer(reducer,initialStateCommentsUpdate);
-
-  const contextValue = {
-    state,
-    dispatch
-  };
-  return (
-    <MyCommenrUpdate.Provider value={contextValue}>
-      {props.children}
-    </MyCommenrUpdate.Provider>
-  );
-}
-
-export function useCommentUpdate () {
-  return useContext(MyCommenrUpdate);
 }
