@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Button } from 'semantic-ui-react';
 import { Form, Field, withFormik, FormikProps } from 'formik';
 import * as Yup from 'yup';
@@ -6,22 +6,21 @@ import * as Yup from 'yup';
 import TxButton from '@polkadot/joy-utils/TxButton';
 import { SubmittableResult } from '@polkadot/api';
 import { withCalls, withMulti } from '@polkadot/ui-api/with';
-
 import * as JoyForms from '@polkadot/joy-utils/forms';
 import { Text } from '@polkadot/types';
 import { Option } from '@polkadot/types/codec';
-import { PostId, CommentId, Comment, CommentUpdate, CommentData } from './types';
 import { useMyAccount } from '@polkadot/joy-utils/MyAccountContext';
-import { queryBlogsToProp } from './utils';
 import { withOnlyMembers } from '@polkadot/joy-utils/MyAccount';
-import { useCommentUpdate } from './CommentContext';
+
+import { queryBlogsToProp } from './utils';
+import { PostId, CommentId, Comment, CommentUpdate, CommentData } from './types';
 
 const buildSchema = (p: ValidationProps) => Yup.object().shape({
 
   body: Yup.string()
     // .min(p.minTextLen, `Your comment is too short. Minimum length is ${p.minTextLen} chars.`)
     // .max(p.maxTextLen, `Your comment is too long. Maximum length is ${p.maxTextLen} chars.`)
-    .required('Comment body is required'),
+    .required('Comment body is required')
 });
 
 type ValidationProps = {
@@ -32,9 +31,9 @@ type ValidationProps = {
 type OuterProps = ValidationProps & {
   postId: PostId,
   parentId?: CommentId,
-  id?: CommentId, 
+  id?: CommentId,
   struct?: Comment,
-  cancelEditForm: () => void
+  onSuccess: () => void
 };
 
 type FormValues = CommentData;
@@ -56,12 +55,10 @@ const InnerForm = (props: FormProps) => {
     isSubmitting,
     setSubmitting,
     resetForm,
-    cancelEditForm
+    onSuccess
   } = props;
 
   const hasParent = parentId !== undefined;
-  const [showReplyButton, setShowReplyButton] = useState(hasParent);
-
 
   const {
     body
@@ -79,16 +76,16 @@ const InnerForm = (props: FormProps) => {
     setSubmitting(false);
   };
 
-  const { dispatch } = useCommentUpdate();
   const isNew = struct === undefined;
 
   const onTxSuccess = (_txResult: SubmittableResult) => {
     setSubmitting(false);
-    resetForm();
-    
-    if (struct) {
-      dispatch({type: 'addUpdatedComment', commentId: struct.id });
-      cancelForm();
+
+    if (!hasParent && !struct) {
+      resetForm();
+    }
+    if (onSuccess) {
+      onSuccess();
     }
   };
 
@@ -111,24 +108,7 @@ const InnerForm = (props: FormProps) => {
     }
   };
 
-  const cancelReplyForm = () => {
-    setShowReplyButton(hasParent);
-    resetForm();
-  };
-
-  const cancelForm = () =>{
-    if (hasParent) {
-      cancelReplyForm();
-    }
-    else if (!isNew) {
-      // TODO Find better solution to close this form
-      cancelEditForm();
-      //setShowReplyButton(true); 
-    }
-  }
-  
   const form = () => (
-    
     <Form className='ui form JoyForm EditEntityForm'>
 
       <LabelledField name='body' {...props}>
@@ -155,26 +135,13 @@ const InnerForm = (props: FormProps) => {
         />
           <Button
             type='button'
-            onClick={cancelForm}
+            onClick={onSuccess}
             content='Cancel'
           />
       </LabelledField>
     </Form>);
 
-  const replyButton = () => (
-    <Button
-      type='button'
-      basic
-      onClick={() => setShowReplyButton(false)}
-      content='Reply'
-    />);
-
-  return <>
-    {showReplyButton
-      ? replyButton() 
-      : form()
-    }
-  </>;
+  return form();
 };
 
 const EditForm = withFormik<OuterProps, FormValues>({
@@ -220,7 +187,7 @@ function LoadStruct (props: LoadStructProps) {
 
   const struct = structOpt.unwrap();
 
-    return <EditForm {...props} struct={struct} />;
+  return <EditForm {...props} struct={struct} />;
 
 }
 
