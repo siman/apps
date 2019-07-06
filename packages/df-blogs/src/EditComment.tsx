@@ -20,7 +20,7 @@ const buildSchema = (p: ValidationProps) => Yup.object().shape({
   body: Yup.string()
     // .min(p.minTextLen, `Your comment is too short. Minimum length is ${p.minTextLen} chars.`)
     // .max(p.maxTextLen, `Your comment is too long. Maximum length is ${p.maxTextLen} chars.`)
-    .required('Comment body is required'),
+    .required('Comment body is required')
 });
 
 type ValidationProps = {
@@ -31,7 +31,7 @@ type ValidationProps = {
 type OuterProps = ValidationProps & {
   postId: PostId,
   parentId?: CommentId,
-  id?: CommentId, 
+  id?: CommentId,
   struct?: Comment,
   onSuccess: () => void
 };
@@ -81,9 +81,9 @@ const InnerForm = (props: FormProps) => {
   const onTxSuccess = (_txResult: SubmittableResult) => {
     setSubmitting(false);
 
-    if (!hasParent && !struct ) {
+    if (!hasParent && !struct) {
       resetForm();
-    } 
+    }
     if (onSuccess) {
       onSuccess();
     }
@@ -107,9 +107,8 @@ const InnerForm = (props: FormProps) => {
       return [];
     }
   };
-  
+
   const form = () => (
-    
     <Form className='ui form JoyForm EditEntityForm'>
 
       <LabelledField name='body' {...props}>
@@ -188,7 +187,7 @@ function LoadStruct (props: LoadStructProps) {
 
   const struct = structOpt.unwrap();
 
-    return <EditForm {...props} struct={struct} />;
+  return <EditForm {...props} struct={struct} />;
 
 }
 

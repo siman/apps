@@ -1,5 +1,5 @@
-import { Comment as SuiComment, Button, Icon } from 'semantic-ui-react'
-import React, { useState, useEffect } from 'react'
+import { Comment as SuiComment, Button, Icon } from 'semantic-ui-react';
+import React, { useState, useEffect } from 'react';
 
 import { withCalls, withMulti, withApi } from '@polkadot/ui-api/with';
 import Section from '@polkadot/joy-utils/Section';
@@ -23,7 +23,7 @@ type Props = ApiProps & {
 
 const renderLevelOfComments = (parentComments: Comment[], childrenComments: Comment[]) => {
   return parentComments.map((comment, i) =>
-   <ViewComment key={i} comment={comment} commentsWithParentId={childrenComments} api={api}/>);
+  <ViewComment key={i} comment={comment} commentsWithParentId={childrenComments} api={api}/>);
 };
 
 function InnerCommentsByPost (props: Props) {
@@ -33,14 +33,14 @@ function InnerCommentsByPost (props: Props) {
     commentIds = []
   } = props;
 
-  const commentsCount = commentIds.length;//post.comments_count.toNumber();
+  const commentsCount = commentIds.length;// post.comments_count.toNumber();
   const [loaded, setLoaded] = useState(false);
   const [comments, setComments] = useState(new Array<Comment>());
 
   useEffect(() => {
     const loadComments = async () => {
       if (!commentsCount) return;
-      console.log("CommentsByPost");
+      console.log('CommentsByPost');
       const apiCalls: Promise<OptionComment>[] = commentIds.map(id =>
         api.query.blogs.commentById(id) as Promise<OptionComment>);
 
@@ -50,8 +50,8 @@ function InnerCommentsByPost (props: Props) {
       setLoaded(true);
     };
 
-    loadComments();
-  }, [ commentsCount ]);//TODO change dependense on post.comments_counts or CommentCreated, CommentUpdated with current postId
+    loadComments().catch(err => console.log(err));
+  }, [ commentsCount ]);// TODO change dependense on post.comments_counts or CommentCreated, CommentUpdated with current postId
 
   const renderComments = () => {
     if (!commentsCount) {
@@ -68,7 +68,7 @@ function InnerCommentsByPost (props: Props) {
 
   return (
       <Section title={`Comments (${commentsCount})`} className='DfCommentsByPost'>
-        <div style={{ marginBottom: '2rem' }}> 
+        <div style={{ marginBottom: '2rem' }}>
           <NewComment postId={postId} />
         </div>
         {renderComments()}
@@ -99,39 +99,40 @@ export function ViewComment (props: ViewCommentProps) {
   const { state: { address: myAddress } } = useMyAccount();
   const [parentComments, childrenComments] = partition(commentsWithParentId, (e) => e.parent_id.eq(comment.id));
 
-  const { id, created:{ account, block, time } } = comment;
+  const { id, created: { account, block, time } } = comment;
   const [ text , setText ] = useState(comment.json.body);
 
-  if (!comment || comment.isEmpty) { 
+  if (!comment || comment.isEmpty) {
     return null;
   }
 
-  useEffect(() => { 
-      if (!commentIdForUpdate.eq(id)) return;
+  useEffect(() => {
+    if (!commentIdForUpdate.eq(id)) return;
 
-      console.log("Comment reload");
- 
-       api.query.blogs.commentById(commentIdForUpdate, (x => {
-          if (x.isNone) return;
-          const comment = x.unwrap() as Comment;
-          setText(comment.json.body);
-          setCommentIdForUpdate(new CommentId(0));
-        }));
+    console.log('Comment reload');
+
+    api.query.blogs.commentById(commentIdForUpdate, (x => {
+      if (x.isNone) return;
+      const comment = x.unwrap() as Comment;
+      setText(comment.json.body);
+      setCommentIdForUpdate(new CommentId(0));
+    })).catch(err => console.log(err));
 
   },[ commentIdForUpdate.toString() && !commentIdForUpdate.eqn(0) ]);
 
   const isMyStruct = myAddress === account.toString();
 
-  const renderButtonEditForm = () => { 
+  const renderButtonEditForm = () => {
     if (!isMyStruct || showEditForm) return null;
 
     return <Button
       type='button'
       basic
-      onClick={() => setShowEditForm(true)}>
+      onClick={() => setShowEditForm(true)}
+    >
         <Icon name='pencil'/>
         Edit
-      </Button>;
+    </Button>;
   };
 
   const replyButton = () => (
@@ -154,23 +155,23 @@ export function ViewComment (props: ViewCommentProps) {
             <div>{time.toLocaleString()} at block #{block.toNumber()}</div>
           </SuiComment.Metadata>
           <SuiComment.Content>
-            {showEditForm 
-              ? <NewComment 
+            {showEditForm
+              ? <NewComment
                 struct={comment}
                 id={comment.id}
                 postId={comment.post_id}
-                onSuccess={()=> { setShowEditForm(false); setCommentIdForUpdate(id); }}
+                onSuccess={() => { setShowEditForm(false); setCommentIdForUpdate(id); }}
               />
               : <>
                 <SuiComment.Text>{text}</SuiComment.Text>
                 <SuiComment.Actions>
                   <SuiComment.Action>
-                    {showReplyForm 
+                    {showReplyForm
                       ? <NewComment
                           postId={comment.post_id}
                           parentId={comment.id}
                           onSuccess={() => setShowReplyForm(false)}
-                        />
+                      />
                       : replyButton()
                     }
                   </SuiComment.Action>

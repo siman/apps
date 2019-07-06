@@ -58,9 +58,7 @@ const LabelledText = JoyForms.LabelledText<FormValues>();
 
 const InnerForm = (props: FormProps) => {
   const {
-    history,
     blogId,
-    id,
     struct,
     values,
     dirty,
@@ -119,11 +117,11 @@ const InnerForm = (props: FormProps) => {
     }
   };
 
-  const goToView = (id: PostId) => {
-    if (history) {
-      history.push('/blogs/posts/' + id.toString());
-    }
-  };
+  // const goToView = (id: PostId) => {
+  //   if (history) {
+  //     history.push('/blogs/posts/' + id.toString());
+  //   }
+  // };
 
   const form =
     <Form className='ui form JoyForm EditEntityForm'>
@@ -238,7 +236,7 @@ type LoadStructProps = OuterProps & {
 };
 
 function LoadStruct (props: LoadStructProps) {
-  const { state: { address: myAddress } } = useMyAccount(); //TODO maybe remove, becose usles
+  const { state: { address: myAddress } } = useMyAccount(); // TODO maybe remove, becose usles
   const { structOpt } = props;
 
   if (!myAddress || !structOpt) {
@@ -251,7 +249,7 @@ function LoadStruct (props: LoadStructProps) {
 
   const struct = structOpt.unwrap();
 
-    return <EditForm {...props} struct={struct}/>;//TODO
+  return <EditForm {...props} struct={struct}/>;// TODO
 }
 
 export const NewPost = withMulti(
