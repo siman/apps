@@ -13,7 +13,7 @@ import { partition } from 'lodash';
 import { PostId, CommentId, Comment, OptionComment, Post } from './types';
 import { NewComment } from './EditComment';
 import { queryBlogsToProp } from './utils';
-import { Voter } from './Voter';
+import { Voter } from './EditVoter';
 
 type Props = ApiProps & {
   postId: PostId,
@@ -89,23 +89,29 @@ type ViewCommentProps = {
   commentsWithParentId: Comment[];
 };
 
-export function ViewComment (props: ViewCommentProps) {
+export enum reactionStateType {
+  Upvote,
+  Downvote,
+  None
+}
 
-  const [showEditForm, setShowEditForm] = useState(false);
-  const [showReplyForm, setShowReplyForm] = useState(false);
-  const [commentIdForUpdate, setCommentIdForUpdate] = useState(new CommentId(0));
+export function ViewComment (props: ViewCommentProps) {
 
   const { api, comment, commentsWithParentId } = props;
   const { state: { address: myAddress } } = useMyAccount();
   const [parentComments, childrenComments] = partition(commentsWithParentId, (e) => e.parent_id.eq(comment.id));
 
   const { id, created: { account, block, time } } = comment;
-  const [ text , setText ] = useState(comment.json.body);
+
+  const [ reactionState, setReactionState ] = useState(reactionStateType.None);
+  const [ struct , setStruct ] = useState(comment);
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [showReplyForm, setShowReplyForm] = useState(false);
+  const [commentIdForUpdate, setCommentIdForUpdate] = useState(new CommentId(0));
 
   if (!comment || comment.isEmpty) {
     return null;
   }
-
   useEffect(() => {
     if (!commentIdForUpdate.eq(id)) return;
 
@@ -114,11 +120,11 @@ export function ViewComment (props: ViewCommentProps) {
     api.query.blogs.commentById(commentIdForUpdate, (x => {
       if (x.isNone) return;
       const comment = x.unwrap() as Comment;
-      setText(comment.json.body);
+      setStruct(comment);
       setCommentIdForUpdate(new CommentId(0));
     })).catch(err => console.log(err));
 
-  },[ commentIdForUpdate.toString() && !commentIdForUpdate.eqn(0) ]);
+  },[ commentIdForUpdate.toString() && !commentIdForUpdate.eqn(0), reactionState ]);
 
   const isMyStruct = myAddress === account.toString();
 
@@ -147,7 +153,11 @@ export function ViewComment (props: ViewCommentProps) {
   <SuiComment.Group threaded>
     <SuiComment>
       <div className='DfCommentBox'>
-        <Voter struct={comment} />
+        <Voter
+          struct={struct}
+          reactionState={reactionState}
+          setReactionState={setReactionState}
+        />
         <div>
           <SuiComment.Metadata>
             <AddressMini value={account} isShort={false} isPadded={false} withName/>
@@ -163,7 +173,7 @@ export function ViewComment (props: ViewCommentProps) {
                 onSuccess={() => { setShowEditForm(false); setCommentIdForUpdate(id); }}
               />
               : <>
-                <SuiComment.Text>{text}</SuiComment.Text>
+                <SuiComment.Text>{struct.json.body}</SuiComment.Text>
                 <SuiComment.Actions>
                   <SuiComment.Action>
                     {showReplyForm
