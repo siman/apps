@@ -86,8 +86,9 @@ const InnerForm = (props: MediaFormProps<OuterProps, FormValues>) => {
     resetForm,
   } = props;
 
-  const { myAccountId, memberIsCurator, memberIsContentLead } = useMyMembership();
-  const isVideoOwner = entity && !isAccountAChannelOwner(entity.channel, myAccountId)
+  const { myAccountId, memberIsCurator, memberIsContentLead } = useMyMembership()
+  const isNew = !entity
+  const isVideoOwner = isAccountAChannelOwner(entity?.channel, myAccountId)
   
   if (!mediaObjectClass) {
     return <JoyError title={`"Media Object" entity class is undefined`} />
@@ -97,7 +98,7 @@ const InnerForm = (props: MediaFormProps<OuterProps, FormValues>) => {
     return <JoyError title={`"Video" entity class is undefined`} />
   }
 
-  if (!isVideoOwner && !memberIsCurator && !memberIsContentLead) {
+  if (!isNew && !(isVideoOwner || memberIsCurator || memberIsContentLead)) {
     return <JoyError title={`Only a video owner, curator or content lead can edit`} />
   }
 
@@ -410,7 +411,7 @@ const InnerForm = (props: MediaFormProps<OuterProps, FormValues>) => {
     <Form className='ui form JoyForm EditMetaForm'>
       {tabs}
       <LabelledField style={{ marginTop: '1rem' }} {...props}>
-        {!entity
+        {isNew
           ? renderTransactionButton()
           : renderUpdateEntityButton()
         }
