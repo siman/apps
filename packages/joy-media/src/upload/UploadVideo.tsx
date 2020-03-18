@@ -86,21 +86,22 @@ const InnerForm = (props: MediaFormProps<OuterProps, FormValues>) => {
     resetForm,
   } = props;
 
-  const { myAccountId } = useMyMembership();
-
-  const { thumbnail } = values
-
+  const { myAccountId, memberIsCurator, memberIsContentLead } = useMyMembership();
+  const isVideoOwner = entity && !isAccountAChannelOwner(entity.channel, myAccountId)
+  
   if (!mediaObjectClass) {
     return <JoyError title={`"Media Object" entity class is undefined`} />
   }
 
   if (!entityClass) {
-    return <JoyError title={`"Video" entity class is undefined<`} />
+    return <JoyError title={`"Video" entity class is undefined`} />
   }
 
-  if (entity && !isAccountAChannelOwner(entity.channel, myAccountId)) {
-    return <JoyError title={`Only owner can edit video`} />
+  if (!isVideoOwner && !memberIsCurator && !memberIsContentLead) {
+    return <JoyError title={`Only a video owner, curator or content lead can edit`} />
   }
+
+  const { thumbnail } = values
 
   // Next consts are used in tx params:
   const with_credential = new Option<Credential>(Credential, new Credential(2))
@@ -134,7 +135,7 @@ const InnerForm = (props: MediaFormProps<OuterProps, FormValues>) => {
         }
       }
 
-      // For debugging:
+      // For debugging purposes:
       // const propForLog: any = { fieldName, fieldValue }
       // if (shouldIncludeValue) {
       //   propForLog.shouldIncludeValue = shouldIncludeValue

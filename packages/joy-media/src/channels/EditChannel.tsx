@@ -54,17 +54,15 @@ const InnerForm = (props: MediaFormProps<OuterProps, FormValues>) => {
     resetForm
   } = props;
 
-  const { myAccountId, myMemberId } = useMyMembership();
+  const { myAccountId, myMemberId, memberIsCurator, memberIsContentLead } = useMyMembership();
+  const isChannelOwner = entity && !isAccountAChannelOwner(entity, myAccountId)
 
-  if (entity && !isAccountAChannelOwner(entity, myAccountId)) {
-    return <JoyError title={`Only owner can edit channel`} />
+  if (!isChannelOwner && !memberIsCurator && !memberIsContentLead) {
+    return <JoyError title={`Only a channel owner, curator or content lead can edit`} />
   }
 
   const { avatar } = values;
   const isNew = !entity;
-
-  // if user is not the channel owner don't render the edit form
-  // return null
 
   const onTxSuccess: TxCallback = (txResult: SubmittableResult) => {
     setSubmitting(false)

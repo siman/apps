@@ -1,5 +1,4 @@
 import React from 'react';
-import { Message } from 'semantic-ui-react';
 import { Link } from 'react-router-dom';
 
 import { AccountId } from '@polkadot/types/interfaces';
@@ -15,6 +14,7 @@ import { queryMembershipToProp } from '@polkadot/joy-members/utils';
 import { useMyAccount } from '@polkadot/joy-utils/MyAccountContext';
 import { queryToProp, MultipleLinkedMapEntry, SingleLinkedMapEntry } from '@polkadot/joy-utils/index';
 import { useMyMembership } from './MyMembershipContext';
+import { JoyWarn } from './JoyStatus';
 
 export type MyAddressProps = {
   myAddress?: string
@@ -198,7 +198,7 @@ function withCurationActor<P extends MyAccountProps> (Component: React.Component
       curatorEntries
     );
 
-    const correspondingCurationActor = (accountId: AccountId, curators: MultipleLinkedMapEntry<CuratorId, Curator>) => {
+    const correspondingCurationActor = (curators: MultipleLinkedMapEntry<CuratorId, Curator>) => {
       const ix = curators.linked_values.findIndex(
         curator => myAccountId.eq(curator.role_account) && curator.is_active
       );
@@ -208,7 +208,7 @@ function withCurationActor<P extends MyAccountProps> (Component: React.Component
         }) : null;
     }
 
-    const firstMatchingCurationActor = correspondingCurationActor(myAccountId, curators);
+    const firstMatchingCurationActor = correspondingCurationActor(curators);
 
     // Is the current key corresponding to an active curator role key?
     if (firstMatchingCurationActor) {
@@ -272,6 +272,7 @@ function withCurationActor<P extends MyAccountProps> (Component: React.Component
   }
 }
 
+// TODO this HOC should be optimized: we can get values from MyMembershipProvider and set them on inner component.
 export const withMyAccount = <P extends MyAccountProps> (Component: React.ComponentType<P>) =>
 withMulti(
   Component,
@@ -290,20 +291,17 @@ export function withMembershipRequired<P extends {}> (Component: React.Component
     const { myMemberIdChecked, iAmMember } = useMyMembership()
 
     if (!myMemberIdChecked) {
-      return <em>Loading...</em>;
+      return <em>Checking your membership...</em>;
     } else if (iAmMember) {
       return <Component {...props} />;
     }
 
     return (
-      <Message warning className='JoyMainStatus'>
-        <Message.Header>Only members can access this functionality.</Message.Header>
-        <div style={{ marginTop: '1rem' }}>
-          <Link to={`/members/edit`} className='ui button orange'>Register here</Link>
-          <span style={{ margin: '0 .5rem' }}> or </span>
-          <Link to={`/accounts`} className='ui button'>Change key</Link>
-        </div>
-      </Message>
+      <JoyWarn title={`Only members can access this functionality`}>
+        <Link to={`/members/edit`} className='ui button orange'>Register here</Link>
+        <span style={{ margin: '0 .5rem' }}> or </span>
+        <Link to={`/accounts`} className='ui button'>Change key</Link>
+      </JoyWarn>
     );
   };
 }
