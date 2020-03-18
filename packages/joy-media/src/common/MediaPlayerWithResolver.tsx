@@ -11,9 +11,8 @@ import { AccountId } from '@polkadot/types/interfaces';
 import translate from '../translate';
 import { DiscoveryProviderProps, withDiscoveryProvider } from '../DiscoveryProvider';
 import { DataObjectStorageRelationshipId, DataObjectStorageRelationship } from '@joystream/types/media';
-import { Message } from 'semantic-ui-react';
 import { MediaPlayerView, RequiredMediaPlayerProps } from './MediaPlayerView';
-import { JoyInfo } from '@polkadot/joy-utils/JoyStatus';
+import { JoyInfo, JoyError } from '@polkadot/joy-utils/JoyStatus';
 
 type Props = ApiProps & I18nProps & DiscoveryProviderProps & RequiredMediaPlayerProps;
 
@@ -117,11 +116,10 @@ function InnerComponent(props: Props) {
 
   if (error) {
     return (
-      <Message error className='JoyMainStatus'>
-        <Message.Header>Error loading media content</Message.Header>
+      <JoyError title={`Failed to load media content`}>
         <p>{error.toString()}</p>
         <button className='ui button' onClick={resolveAsset}>Try again</button>
-      </Message>
+      </JoyError>
     );
   }
 

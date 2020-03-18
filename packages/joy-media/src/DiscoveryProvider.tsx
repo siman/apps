@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useContext, createContext } from 'react';
-import { Message } from 'semantic-ui-react';
 import axios, { CancelToken } from 'axios';
 import { parse as parseUrl } from 'url';
 
@@ -133,12 +132,9 @@ export const DiscoveryProviderProvider = (props: React.PropsWithChildren<{}>) =>
 
   if (!provider) {
     return (
-      <Message info className='JoyMainStatus'>
-        <Message.Header>Initializing Content Discovery Provider</Message.Header>
-        <div style={{ marginTop: '1rem' }}>
-          Loading bootstrap nodes... Please wait.
-        </div>
-      </Message>
+      <JoyInfo title={`Initializing Content Discovery Provider`}>
+        Loading bootstrap nodes... Please wait.
+      </JoyInfo>
     )
   }
 

@@ -2,7 +2,7 @@ import React from 'react';
 import BN from 'bn.js';
 import axios, { CancelTokenSource } from 'axios';
 import { History } from 'history';
-import { Progress, Message } from 'semantic-ui-react';
+import { Progress } from 'semantic-ui-react';
 
 import { InputFile } from '@polkadot/react-components/index';
 import { ApiProps } from '@polkadot/react-api/types';
@@ -22,7 +22,7 @@ import TxButton from '@polkadot/joy-utils/TxButton';
 import IpfsHash from 'ipfs-only-hash';
 import { ChannelId } from '@joystream/types/content-working-group';
 import { EditVideoView } from './upload/EditVideo.view';
-import { JoyInfo } from '@polkadot/joy-utils/JoyStatus';
+import { JoyInfo, JoyError } from '@polkadot/joy-utils/JoyStatus';
 
 const MAX_FILE_SIZE_MB = 500;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
@@ -94,11 +94,10 @@ class Component extends React.PureComponent<Props, State> {
   private renderError () {
     const { error } = this.state;
     return (
-      <Message error className='JoyMainStatus'>
-        <Message.Header>Failed to upload your file</Message.Header>
+      <JoyError title={`Failed to upload your file`}>
         <p>{error.toString()}</p>
         <button className='ui button' onClick={this.resetForm}>Start over</button>
-      </Message>
+      </JoyError>
     );
   }
 
