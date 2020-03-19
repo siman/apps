@@ -54,12 +54,12 @@ const InnerForm = (props: MediaFormProps<OuterProps, FormValues>) => {
     resetForm
   } = props;
 
-  const { myAccountId, myMemberId, memberIsCurator, memberIsContentLead } = useMyMembership()
+  const { myAccountId, myMemberId } = useMyMembership()
   const isNew = !entity
   const isChannelOwner = isAccountAChannelOwner(entity, myAccountId)
 
-  if (!isNew && !(isChannelOwner || memberIsCurator || memberIsContentLead)) {
-    return <JoyError title={`Only a channel owner, curator or content lead can edit`} />
+  if (!isNew && !isChannelOwner) {
+    return <JoyError title={`Only a channel owner can edit`} />
   }
 
   const { avatar } = values
@@ -91,6 +91,13 @@ const InnerForm = (props: MediaFormProps<OuterProps, FormValues>) => {
 
       const channelOwner = myMemberId;
       const roleAccount = myAccountId;
+
+      // TODO (from Martin)
+      // - `curator lead` should use `credential` = `0`, and `as_entity_ maintainer`= `false`
+      // - `curators` should use `credential` = `1`, and `as_entity_ maintainer`= `false`
+      // - `owner` should use `credential` = `2`, and `as_entity_ maintainer`= `true` (but works as `false`)
+
+      // TODO set different credential if curator or content lead.
       const contentType = new ChannelContentType(values.content);
 
       return [
