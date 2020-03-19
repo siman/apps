@@ -105,8 +105,24 @@ const InnerForm = (props: MediaFormProps<OuterProps, FormValues>) => {
   const { thumbnail } = values
 
   // Next consts are used in tx params:
-  const with_credential = new Option<Credential>(Credential, new Credential(2))
-  const as_entity_maintainer = new bool(false)
+
+  // Default values are for video owner
+  let credentialVal: number = 2
+  let maintainerVal: boolean = true
+
+  if (memberIsCurator) {
+    credentialVal = 1
+    maintainerVal = false
+  } else if (memberIsContentLead) {
+    credentialVal = 0
+    maintainerVal = false
+  }
+
+  // TODO set different credential if curator or content lead.
+  const with_credential = new Option<Credential>(
+    Credential, new Credential(credentialVal))
+
+  const as_entity_maintainer = new bool(maintainerVal)
   const schema_id = new u16(0)
 
   const entityCodec = new VideoCodec(entityClass!)
