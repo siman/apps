@@ -8,6 +8,24 @@ import PropertyTypeName from './PropertyTypeName';
 import { ChannelId } from '../content-working-group';
 
 /**
+ * A utility function that can convert a `boolean`-like `string`
+ * (`'true'`, `'yes'`, `'1'`) or a number `1` to bolean `true`.
+ */
+const toBool = (value: any): boolean => {
+  if (typeof value === 'string' || typeof value === 'number') {
+    value = value.toString().toLowerCase()
+    if (['true', 'yes', '1'].indexOf(value) >= 0) {
+      return true
+    }
+    return false
+  } else if (typeof value === 'boolean') {
+    return value
+  } else {
+    throw new Error('Unsupported representation of a boolean value: ' + value)
+  }
+}
+
+/**
  * Convert a Substrate value to a plain JavaScript value of a corresponding type
  * like string, number, boolean, etc.
  */
@@ -47,17 +65,7 @@ function plainToSubstrate(propType: string, value: any): PropertyValue {
   }
 
   const valueAsBool = (): boolean => {
-    if (typeof value === 'string' || typeof value === 'number') {
-      value = value.toString().toLowerCase()
-      if (['true', 'yes', '1'].indexOf(value) >= 0) {
-        return true
-      }
-      return false
-    } else if (typeof value === 'boolean') {
-      return value
-    } else {
-      throw new Error('Unsupported representation of a boolean value: ' + value)
-    }
+    return toBool(value)
   }
 
   const valueAsArr = (): any[] => {
@@ -73,7 +81,7 @@ function plainToSubstrate(propType: string, value: any): PropertyValue {
   }
 
   const valueAsBoolArr = (): boolean[] => {
-    return valueAsArr().map(valueAsBool)
+    return valueAsArr().map(x => toBool(x))
   }
 
   switch (propType) {
