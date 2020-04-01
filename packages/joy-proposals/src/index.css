@@ -2,9 +2,21 @@
 
 .ProposalTypePreview {
   background-color: #fff;
+  display: flex;
+  
 
   &:hover {
-    border: 1px solid #4183c4;
+    border: 1px solid #c2c2cf;
+  }
+
+  .content {
+    margin-right: 1.5rem;
+  }
+
+  .actions {
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
   }
 
   .name {
@@ -23,8 +35,9 @@
       margin-right: 2rem;
     }
     .label {
-      font-size: .9rem;
+      font-size: .75rem;
       margin-bottom: .25rem;
+      text-transform: uppercase;
     }
     .value {
       font-size: 1.5rem;

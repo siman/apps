@@ -1,5 +1,5 @@
 import React from 'react'
-import { Segment } from 'semantic-ui-react'
+import { Segment, Button } from 'semantic-ui-react'
 import { MutedDiv } from '@polkadot/joy-utils/MutedText'
 
 export type ProposalTypePreviewProps = {
@@ -23,7 +23,7 @@ function Condition(props: ConditionProps) {
 
   return (
     <div className='condition'>
-      <MutedDiv className='label'>{label}:</MutedDiv>
+      <MutedDiv className='label'>{label}</MutedDiv>
       <div className='value'>{value ? valueWithSuffix() : 'NONE'}</div>
     </div>
   )
@@ -33,12 +33,25 @@ export function ProposalTypePreview (props: ProposalTypePreviewProps) {
 
   return (
     <Segment padded className='ProposalTypePreview'>
-      <h3 className='name'>{props.name}</h3>
-      <div className='description'>{props.description}</div>
-      <div className='conditions'>
-        <Condition label='Required Stake' value={props.requiredStake} suffix='tJOY' />
-        <Condition label='Cancellation Fee' value={props.cancellationFee} suffix='tJOY' />
-        <Condition label='Grace Period' value={props.gracePeriod} />
+      <div className='content'>
+        <h3 className='name'>{props.name}</h3>
+        <div className='description'>{props.description}</div>
+        <div className='conditions'>
+          <Condition label='Required Stake' value={props.requiredStake} suffix='tJOY' />
+          <Condition label='Cancellation Fee' value={props.cancellationFee} suffix='tJOY' />
+          <Condition label='Grace Period' value={props.gracePeriod} />
+        </div>
+      </div>
+      <div className='actions'>
+        <Button
+          type='button'
+          inverted
+          primary
+          onClick={() => alert('Not implemented yet :(')}
+        >
+        Create proposal
+        <i className='right arrow icon' />
+      </Button>
       </div>
     </Segment>
   )
