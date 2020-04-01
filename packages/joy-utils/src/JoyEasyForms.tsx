@@ -1,11 +1,11 @@
 import React from 'react';
-import { Dropdown, DropdownItemProps, DropdownProps } from 'semantic-ui-react';
-import { FormikProps, Field } from 'formik';
+import {Dropdown, DropdownItemProps, DropdownProps} from 'semantic-ui-react';
+import {Field, FormikProps} from 'formik';
 import * as JoyForms from '@polkadot/joy-utils/forms';
-import { SubmittableResult } from '@polkadot/api';
-import { TxFailedCallback, TxCallback } from '@polkadot/react-components/Status/types';
-import { OnTxButtonClick } from '@polkadot/joy-utils/TxButton';
-import isEqual from 'lodash/isEqual'
+import {SubmittableResult} from '@polkadot/api';
+import {TxCallback, TxFailedCallback} from '@polkadot/react-components/Status/types';
+import {OnTxButtonClick} from '@polkadot/joy-utils/TxButton';
+import isEqual from 'lodash/isEqual';
 
 export type FormCallbacks = {
   onSubmit: OnTxButtonClick,
@@ -58,7 +58,7 @@ export type EasyFormProps<OuterProps, FormValues> =
   FormikProps<FormValues> &
   FormFields<OuterProps, FormValues> &
   FormCallbacks & {
-    isFieldChanged: (field: keyof FormValues | GenericEasyProp<FormValues>) => boolean 
+    isFieldChanged: (field: keyof FormValues | GenericEasyProp<FormValues>) => boolean
   };
 
 export function withEasyForm<OuterProps, FormValues>
@@ -69,9 +69,9 @@ export function withEasyForm<OuterProps, FormValues>
   type FieldObject = GenericEasyProp<FormValues>
 
   const LabelledText = JoyForms.LabelledText<FormValues>();
-  
+
   const LabelledField = JoyForms.LabelledField<FormValues>();
-  
+
   function EasyText (props: EasyTextProps<OuterProps, FormValues>) {
     const { field: f } = props;
     return !f ? null : <LabelledText name={f.id} label={f.name} tooltip={f.description} required={f.required} {...props} />;
@@ -83,7 +83,7 @@ export function withEasyForm<OuterProps, FormValues>
     const { id } = f;
 
     const allFieldProps = {
-      name: id, id, placeholder, className, style, 
+      name: id, id, placeholder, className, style,
       disabled: otherProps.isSubmitting,
       ...fieldProps
     };
@@ -139,10 +139,10 @@ export function withEasyForm<OuterProps, FormValues>
       if (isValid) {
         sendTx();
       } else {
-        console.log('Form is invalid. Errors:', errors)
+        console.warn('Form is invalid. Errors:', errors)
       }
     };
-    
+
     const onTxSuccess: TxCallback = (_txResult: SubmittableResult) => {
       setSubmitting(false);
     };
