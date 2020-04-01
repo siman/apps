@@ -3,7 +3,6 @@
 .ProposalTypePreview {
   background-color: #fff;
   display: flex;
-  
 
   &:hover {
     border: 1px solid #c2c2cf;
@@ -49,5 +48,6 @@
 
 .ProposalForm {
   width: 100%;
-  max-width: 600px;
+  max-width: 600px !important;
+  margin: 0 auto;
 }

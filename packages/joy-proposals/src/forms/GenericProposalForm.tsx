@@ -1,17 +1,24 @@
 import React from 'react';
-import { Button } from 'semantic-ui-react';
-import { Form, withFormik } from 'formik';
-import { History } from 'history';
+import {Button} from 'semantic-ui-react';
+import {Form, withFormik} from 'formik';
+import {History} from 'history';
 import BN from 'bn.js';
 
-import { withEasyForm, EasyFormProps } from '@polkadot/joy-utils/JoyEasyForms';
-import { onImageError } from '@polkadot/joy-utils/images';
+import {EasyFormProps, withEasyForm} from '@polkadot/joy-utils/JoyEasyForms';
 import TxButton from '@polkadot/joy-utils/TxButton';
-import { findFirstParamOfSubstrateEvent } from '@polkadot/joy-utils/index';
-import { useMyMembership } from '@polkadot/joy-utils/MyMembershipContext';
-import { TxCallback } from '@polkadot/react-components/Status/types';
-import { SubmittableResult } from '@polkadot/api';
-import { ProposalId, ProposalType, ProposalFormValues, ProposalGenericProp, ProposalValidationConstraints, ProposalToFormValues, ProposalFields as Fields } from './ProposalTypes';
+import {findFirstParamOfSubstrateEvent} from '@polkadot/joy-utils/index';
+import {TxCallback} from '@polkadot/react-components/Status/types';
+import {SubmittableResult} from '@polkadot/api';
+import {
+  ProposalFields as Fields,
+  ProposalFormValues,
+  ProposalId,
+  ProposalToFormValues,
+  ProposalType,
+  ProposalValidationConstraints
+} from './ProposalTypes';
+import {buildValidationSchema} from '@polkadot/joy-proposals/forms/ValidationSchema';
+import Section from '@polkadot/joy-utils/Section';
 
 type FormValues = ProposalFormValues;
 
@@ -26,7 +33,7 @@ const InnerForm = (props: EasyFormProps<OuterProps, FormValues>) => {
   const {
     // React components for form fields:
     EasyText,
-    EasyDropdown,
+    // EasyDropdown,
     LabelledField,
 
     // Callbacks:
@@ -37,10 +44,10 @@ const InnerForm = (props: EasyFormProps<OuterProps, FormValues>) => {
     history,
     id: existingId,
     entity,
-    isFieldChanged,
+    // isFieldChanged,
 
     // Formik stuff:
-    values,
+    // values,
     dirty,
     isValid,
     isSubmitting,
@@ -48,11 +55,8 @@ const InnerForm = (props: EasyFormProps<OuterProps, FormValues>) => {
     resetForm
   } = props;
 
-  const { myAddress, myMemberId } = useMyMembership();
+  // const { myAddress, myMemberId } = useMyMembership();
   const isNew = !entity;
-
-  // if user is not the channel owner don't render the edit form
-  // return null
 
   const onTxSuccess: TxCallback = (txResult: SubmittableResult) => {
     setSubmitting(false)
@@ -76,11 +80,12 @@ const InnerForm = (props: EasyFormProps<OuterProps, FormValues>) => {
   }
 
   const formFields = () => <>
-    {/*TODO Add proposal type*/}
+    {/* TODO Add proposal type */}
     <EasyText field={Fields.title} {...props} />
     <EasyText field={Fields.description} textarea {...props} />
   </>;
 
+  // @ts-ignore
   const renderMainButton = () =>
     <TxButton
       type='submit'
@@ -100,31 +105,38 @@ const InnerForm = (props: EasyFormProps<OuterProps, FormValues>) => {
       txSuccessCb={onTxSuccess}
     />
 
-  return <div>
+  return <Section title={`Create Proposal`}>
     <Form className='ui form JoyForm ProposalForm'>
 
       {formFields()}
 
       <LabelledField style={{ marginTop: '1rem' }} {...props}>
-        {/* {renderMainButton()} */}
+        {/*{renderMainButton()}*/}
+
         <Button
           type='button'
-          size='large'
+          primary
+          disabled={!dirty || isSubmitting}
+          onClick={() => alert('Not implemented yet :(')}
+          content='Submit'
+        />
+
+        <Button
+          type='button'
           disabled={!dirty || isSubmitting}
           onClick={() => resetForm()}
           content='Reset form'
         />
       </LabelledField>
     </Form>
-  </div>;
+  </Section>;
 };
 
 export const EditForm = withFormik<OuterProps, FormValues>({
 
   // Transform outer props into form values
   mapPropsToValues: (props): FormValues => {
-    const { entity } = props;
-    return ProposalToFormValues(entity);
+    return ProposalToFormValues(props.entity);
   },
 
   validationSchema: (props: OuterProps): any => {
