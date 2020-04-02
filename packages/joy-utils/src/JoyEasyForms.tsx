@@ -19,11 +19,8 @@ export type GenericEasyProp<FormValues> = {
   name: string,
   description?: string,
   required?: boolean,
-  minItems?: number,
-  maxItems?: number,
   minTextLength?: number,
   maxTextLength?: number,
-  classId?: any
 };
 
 type BaseFieldProps<OuterProps, FormValues> = OuterProps & FormikProps<FormValues> & {
