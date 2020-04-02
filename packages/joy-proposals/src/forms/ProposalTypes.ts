@@ -43,7 +43,6 @@ export type ProposalPropId =
 // TODO Extract EasyGenericProp<PropId -> id: PropId>
 export type ProposalGenericProp = {
   id: ProposalPropId,
-  type: string,
   name: string,
   description?: string,
   required?: boolean,
@@ -58,14 +57,12 @@ export const ProposalFields: ProposalFieldsType = {
     id: 'title',
     name: 'Title',
     description: 'Title of your proposal.',
-    type: 'Text', // TODO maybe delete this field: type
     required: true,
   },
   description: {
     id: 'description',
     name: 'Description',
     description: 'Full description of your proposal.',
-    type: 'Text', // TODO maybe delete this field: type
     required: true,
   },
 }
