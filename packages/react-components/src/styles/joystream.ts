@@ -1,4 +1,4 @@
-import { css } from 'styled-components';
+import {css} from 'styled-components';
 
 export default css`
   .text.muted,
@@ -137,7 +137,7 @@ export default css`
   }
 
   .JoyInlineActions {
-    white-space: 'nowrap';
+    white-space: nowrap;
   }
 
   .FlexCenter {
